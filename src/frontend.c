@@ -4,6 +4,20 @@
  * libarcomage.
  */  
 
+//#include "input.h"
+//#include "graphics.h"
+//#include "sound.h"
+
+/**
+ * Game termination and memory cleanup.
+ */ 
+void Quit()
+{
+    //Graphics_Quit();
+    //Sound_Quit();
+    rt_term(); //GE: Terminate D
+}
+
 /**
  * Main function and menu.
  *
@@ -16,41 +30,43 @@
 int main(int argc,char *argv[])
 {
     int m;
-    srand((unsigned)time(NULL));
+    ////srand((unsigned)time(NULL));
 
-    ParseArgs(argc,argv);
+    rt_init(); //Init D
+    InitArcomage(); //Init libarcomage
+    //if (Config.SoundEnabled) //Init SDL
+    //    Sound_Init();
+    //Graphics_Init(Config.Fullscreen);
+    initGame(); //Init a 1vs1 game, will choose player types later
 
-    Init();
-
-    while ((m=Menu())!=5)
-    {
-        switch (m)
-        {
-        case 1:
-            aiplayer=1;
-            Player[0].Name = "Player";
-            Player[1].Name = "A.I.";
-            DoGame();
+    //while ((m=Menu())!=4)//5)
+    //{
+    //    switch (m)
+    //    {
+    //    case 1:
+            Player[GetEnemy()].AI = 1;
+            Player[Turn].Name = "Player";
+            Player[GetEnemy()].Name = "A.I.";
+            //DoGame(); //Start the input loop
             break;
-        case 2:
-            aiplayer=-1;
-            Player[0].Name = "Player 1";
-            Player[1].Name = "Player 2";
-            DoGame();
-            break;
-        case 3:
-            Network_Init();
+    //    case 2:
+    //        Player[Turn].Name  = "Player 1";
+    //        Player[GetEnemy()].Name = "Player 2";
+            //DoGame();
+    //        break;
+    //    case 3:
+        /*    Network_Init();
 
             aiplayer=-1;
             DoNetwork();
 
             Network_Quit();
             break;
-        case 4:
-            DoCredits();
-            break;
-        }
-    }
+        case 4:*/
+            //DoCredits();
+    //        break;
+    //    }
+    //}
 
     Quit();
 
