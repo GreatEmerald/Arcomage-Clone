@@ -7,6 +7,8 @@
 //#include "input.h"
 //#include "graphics.h"
 //#include "sound.h"
+#include "wrapper.h"
+#include <stdio.h>
 
 /**
  * Game termination and memory cleanup.
@@ -29,7 +31,7 @@ void Quit()
  */
 int main(int argc,char *argv[])
 {
-    int m;
+    //int m;
     ////srand((unsigned)time(NULL));
 
     rt_init(); //Init D
@@ -44,11 +46,13 @@ int main(int argc,char *argv[])
     //    switch (m)
     //    {
     //    case 1:
-            Player[GetEnemy()].AI = 1;
-            Player[Turn].Name = "Player";
-            Player[GetEnemy()].Name = "A.I.";
+            Toot=1;
+            SetPlayerInfo(Toot, "Player", 0);
+            SetPlayerInfo(GetEnemy(), "AI", 1);//Player[GetEnemy()].AI = 1;
+            //Player[Turn].Name = "Player";
+            //Player[GetEnemy()].Name = "A.I.";
             //DoGame(); //Start the input loop
-            break;
+            //break;
     //    case 2:
     //        Player[Turn].Name  = "Player 1";
     //        Player[GetEnemy()].Name = "Player 2";
