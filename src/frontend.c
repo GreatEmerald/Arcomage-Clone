@@ -7,7 +7,7 @@
 //#include "input.h"
 //#include "graphics.h"
 //#include "sound.h"
-#include "wrapper.h"
+#include "adapter.h"
 #include <stdio.h>
 
 /**
@@ -15,7 +15,7 @@
  */ 
 void Quit()
 {
-    //Graphics_Quit();
+    Graphics_Quit();
     //Sound_Quit();
     rt_term(); //GE: Terminate D
 }
@@ -38,7 +38,7 @@ int main(int argc,char *argv[])
     InitArcomage(); //Init libarcomage
     //if (Config.SoundEnabled) //Init SDL
     //    Sound_Init();
-    //Graphics_Init(Config.Fullscreen);
+    Graphics_Init(Config.Fullscreen);
     initGame(); //Init a 1vs1 game, will choose player types later
 
     //while ((m=Menu())!=4)//5)
@@ -46,8 +46,7 @@ int main(int argc,char *argv[])
     //    switch (m)
     //    {
     //    case 1:
-            Toot=1;
-            SetPlayerInfo(Toot, "Player", 0);
+            SetPlayerInfo(Turn, "Player", 0);
             SetPlayerInfo(GetEnemy(), "AI", 1);//Player[GetEnemy()].AI = 1;
             //Player[Turn].Name = "Player";
             //Player[GetEnemy()].Name = "A.I.";
