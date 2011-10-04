@@ -35,6 +35,7 @@ enum ConfigTypes {
 void SetPlayerInfo(int PlayerNum, char* Name, char AI);
 int GetConfig(int Type);
 
+immutable(char)* GetFilePath(char* FileName);
 void initGame();
 
 #endif

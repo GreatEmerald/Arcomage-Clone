@@ -24,91 +24,74 @@ int buttonHeight=32;
 int buttonDistanceX=240; //resX/2-buttonWidth/2 = 240
 int buttonDistanceY=160; //resY/2-buttonHeight/2*5 = 160
 int buttonNum=5;
-int /*config*/ bUseOriginalMenu=0;
-int /*config*/ bUseOriginalCards=0; //GE: Whether to use original graphics for the cards.
-char /*config*/ OriginalDataDir[128]; //GE: You can hook up the data dir of the original Arcomage through this and get the stock graphics!
-char JoinedString[128+12];
 
 BFont_Info *numssmall=NULL;
 BFont_Info *font=NULL;
 BFont_Info *bigfont=NULL;
 
-char* JoinStrings(char *FirstString, char *SecondString)
-{
-    strcpy(JoinedString, FirstString);
-    strcat(JoinedString, SecondString);
-    return JoinedString;
-}
-
 void Graphics_Init(int fullscreen)
 {
-	//char JoinedString[128+12];
-	
-  bUseOriginalMenu = ini_getl("Graphics", "bUseOriginalMenu", 0, CONFIGFILE);
-  bUseOriginalCards = ini_getl("Graphics", "bUseOriginalCards", 0, CONFIGFILE);
-  ini_gets("Graphics", "OriginalDataDir", "data/", OriginalDataDir, sizeof(OriginalDataDir), CONFIGFILE); //GE: 128 symbols max path. 80 is known to be too few for some Unreal installs.
-  
-  switch (OPERATINGSYSTEM)
-	{
-		case 1:
-			LoadSurface(ARCODATADIR "boss_linux.png",&GfxData[BOSS]);break;
-		default:
-			LoadSurface(ARCODATADIR "boss_windows.png",&GfxData[BOSS]);break;
-	}
-	if (!bUseOriginalMenu)
-	{
-		LoadSurface(ARCODATADIR "menu.png",&GfxData[MENU]);
-		LoadSurface(ARCODATADIR "menuitems.png",&GfxData[MENUITEMS]);
-		LoadSurface(ARCODATADIR "gamebg.png",&GfxData[GAMEBG]);
-	}
-	LoadSurface(ARCODATADIR "credits.png",&GfxData[CREDITS]);
-	if (!bUseOriginalCards)
-      LoadSurface(ARCODATADIR "deck.png",&GfxData[DECK]);
-  else
-      LoadSurface(JoinStrings(OriginalDataDir, "SPRITES.bmp"),&GfxData[DECK]);
-	SDL_SetColorKey(GfxData[DECK],SDL_SRCCOLORKEY,SDL_MapRGB(GfxData[DECK]->format,255,0,255));
-	LoadSurface(ARCODATADIR "nums_big.png",&GfxData[NUMSBIG]);
-	SDL_SetColorKey(GfxData[NUMSBIG],SDL_SRCCOLORKEY,SDL_MapRGB(GfxData[NUMSBIG]->format,255,0,255));
-	LoadSurface(ARCODATADIR "castle.png",&GfxData[CASTLE]);
+    switch (OPERATINGSYSTEM)
+    {
+	case 1:
+	    LoadSurface(GetFilePath("boss_linux.png"),&GfxData[BOSS]);break;
+	default:
+	    LoadSurface(GetFilePath("boss_windows.png"),&GfxData[BOSS]);break;
+    }
+    if (!GetConfig(UseOriginalMenu))
+    {
+	LoadSurface(GetFilePath("menu.png"),&GfxData[MENU]);
+	LoadSurface(GetFilePath("menuitems.png"),&GfxData[MENUITEMS]);
+	LoadSurface(GetFilePath("gamebg.png"),&GfxData[GAMEBG]);
+    }
+    LoadSurface(GetFilePath("credits.png"),&GfxData[CREDITS]);
+    if (!GetConfig(UseOriginalCards))
+	LoadSurface(GetFilePath("deck.png"),&GfxData[DECK]);
+    else
+      LoadSurface(GetFilePath("SPRITES.bmp"),&GfxData[DECK]);
+    SDL_SetColorKey(GfxData[DECK],SDL_SRCCOLORKEY,SDL_MapRGB(GfxData[DECK]->format,255,0,255));
+    LoadSurface(GetFilePath("nums_big.png"),&GfxData[NUMSBIG]);
+    SDL_SetColorKey(GfxData[NUMSBIG],SDL_SRCCOLORKEY,SDL_MapRGB(GfxData[NUMSBIG]->format,255,0,255));
+    LoadSurface(GetFilePath("castle.png"),&GfxData[CASTLE]);
 
-	LoadSurface(ARCODATADIR "dlgmsg.png",&GfxData[DLGMSG]);
-	LoadSurface(ARCODATADIR "dlgerror.png",&GfxData[DLGERROR]);
-	LoadSurface(ARCODATADIR "dlgnetwork.png",&GfxData[DLGNETWORK]);
-	LoadSurface(ARCODATADIR "dlgwinner.png",&GfxData[DLGWINNER]);
-	LoadSurface(ARCODATADIR "dlglooser.png",&GfxData[DLGLOOSER]);
+    LoadSurface(GetFilePath("dlgmsg.png"),&GfxData[DLGMSG]);
+    LoadSurface(GetFilePath("dlgerror.png"),&GfxData[DLGERROR]);
+    LoadSurface(GetFilePath("dlgnetwork.png"),&GfxData[DLGNETWORK]);
+    LoadSurface(GetFilePath("dlgwinner.png"),&GfxData[DLGWINNER]);
+    LoadSurface(GetFilePath("dlglooser.png"),&GfxData[DLGLOOSER]);
 
-	SDL_SetColorKey(GfxData[CASTLE],SDL_SRCCOLORKEY,SDL_MapRGB(GfxData[CASTLE]->format,255,0,255));
+    SDL_SetColorKey(GfxData[CASTLE],SDL_SRCCOLORKEY,SDL_MapRGB(GfxData[CASTLE]->format,255,0,255));
 
-	numssmall=BFont_LoadFont(ARCODATADIR "nums_small.png");
-	if (!numssmall)
-		FatalError("Data file 'nums_small.png' is missing or corrupt.");
-	bigfont=BFont_LoadFont(ARCODATADIR "bigfont.png");
-	if (!bigfont)
-		FatalError("Data file 'bigfont.png' is missing or corrupt.");
-	font=BFont_LoadFont(ARCODATADIR "font.png");
-	if (!font)
-		FatalError("Data file 'font.png' is missing or corrupt.");
-	BFont_SetCurrentFont(font);
+    numssmall=BFont_LoadFont(GetFilePath("nums_small.png"));
+    if (!numssmall)
+	FatalError("Data file 'nums_small.png' is missing or corrupt.");
+    bigfont=BFont_LoadFont(GetFilePath("bigfont.png"));
+    if (!bigfont)
+	FatalError("Data file 'bigfont.png' is missing or corrupt.");
+    font=BFont_LoadFont(GetFilePath("font.png"));
+    if (!font)
+	FatalError("Data file 'font.png' is missing or corrupt.");
+    BFont_SetCurrentFont(font);
 
-	if (SDL_Init(SDL_INIT_VIDEO|SDL_INIT_NOPARACHUTE)<0)
-		FatalError("Couldn't initialize SDL");
-	SDL_WM_SetCaption("Arcomage v" ARCOVER,NULL);
-	GfxData[SCREEN]=SDL_SetVideoMode(resX,resY,0,SDL_SWSURFACE|(fullscreen*SDL_FULLSCREEN)|SDL_ASYNCBLIT|SDL_RESIZABLE); //GE: Enabling async blitting. It's useful for muticore PCs.
-	if (!GfxData[SCREEN])
-		FatalError("Couldn't set 640x480 video mode");
-	GfxData[BUFFER]=SDL_AllocSurface(GfxData[SCREEN]->flags,GfxData[SCREEN]->w,GfxData[SCREEN]->h,GfxData[SCREEN]->format->BitsPerPixel,GfxData[SCREEN]->format->Rmask,GfxData[SCREEN]->format->Gmask,GfxData[SCREEN]->format->Bmask,0);
-	if (!GfxData[BUFFER])
-		FatalError("Unable to create double buffer!");
-	if (bUseOriginalMenu) //GE: HACK
-	{
-		buttonWidth=125;
-		buttonHeight=54;
-		buttonDistanceX=257;
-		buttonDistanceY=105;
-		LoadSurface(ARCODATADIR "menuO.png",&GfxData[MENU]);
-		LoadSurface(ARCODATADIR "menuitemsO.png",&GfxData[MENUITEMS]);
-		LoadSurface(ARCODATADIR "gamebgO.png",&GfxData[GAMEBG]);
-	}
+    if (SDL_Init(SDL_INIT_VIDEO|SDL_INIT_NOPARACHUTE)<0)
+	FatalError("Couldn't initialize SDL");
+    SDL_WM_SetCaption("Arcomage v" ARCOVER,NULL);
+    GfxData[SCREEN]=SDL_SetVideoMode(resX,resY,0,SDL_SWSURFACE|(fullscreen*SDL_FULLSCREEN)|SDL_ASYNCBLIT|SDL_RESIZABLE); //GE: Enabling async blitting. It's useful for muticore PCs.
+    if (!GfxData[SCREEN])
+	FatalError("Couldn't set 640x480 video mode");
+    GfxData[BUFFER]=SDL_AllocSurface(GfxData[SCREEN]->flags,GfxData[SCREEN]->w,GfxData[SCREEN]->h,GfxData[SCREEN]->format->BitsPerPixel,GfxData[SCREEN]->format->Rmask,GfxData[SCREEN]->format->Gmask,GfxData[SCREEN]->format->Bmask,0);
+    if (!GfxData[BUFFER])
+	FatalError("Unable to create double buffer!");
+    if (bUseOriginalMenu) //GE: HACK
+    {
+	buttonWidth=125;
+	buttonHeight=54;
+	buttonDistanceX=257;
+	buttonDistanceY=105;
+	LoadSurface(GetFilePath("menuO.png"),&GfxData[MENU]);
+	LoadSurface(GetFilePath("menuitemsO.png"),&GfxData[MENUITEMS]);
+	LoadSurface(GetFilePath("gamebgO.png"),&GfxData[GAMEBG]);
+    }
 }
 
 //GE: Add to the linked list.
@@ -603,7 +586,7 @@ int Menu()
 	
 	UpdateScreen();
 	
-	Sound_Play(TITLE);
+	//Sound_Play(TITLE);
 
 	while (!value)
 	{
