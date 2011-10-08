@@ -38,7 +38,7 @@ int main(int argc,char *argv[])
     InitArcomage(); //Init libarcomage
     //if (Config.SoundEnabled) //Init SDL
     //    Sound_Init();
-    Graphics_Init(Config.Fullscreen);
+    Graphics_Init(GetConfig(Fullscreen));
     initGame(); //Init a 1vs1 game, will choose player types later
 
     //while ((m=Menu())!=4)//5)

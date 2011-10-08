@@ -4,14 +4,13 @@
 #include <SDL.h>
 #include <SDL_image.h>
 #include "BFont.h"
-#include "minIni.h"
-#include "resize.h"
-#include "cards.h"
-#include "common.h"
-#include "config.h"
+//#include "resize.h"
+//#include "cards.h"
+//#include "common.h"
+//#include "config.h"
 #include "graphics.h"
-#include "input.h"
-#include "sound.h"
+//#include "input.h"
+//#include "sound.h"
 
 SDL_Event event;
 SDL_Surface *GfxData[GFX_CNT];
@@ -82,7 +81,7 @@ void Graphics_Init(int fullscreen)
     GfxData[BUFFER]=SDL_AllocSurface(GfxData[SCREEN]->flags,GfxData[SCREEN]->w,GfxData[SCREEN]->h,GfxData[SCREEN]->format->BitsPerPixel,GfxData[SCREEN]->format->Rmask,GfxData[SCREEN]->format->Gmask,GfxData[SCREEN]->format->Bmask,0);
     if (!GfxData[BUFFER])
 	FatalError("Unable to create double buffer!");
-    if (bUseOriginalMenu) //GE: HACK
+    if (!GetConfig(UseOriginalMenu)) //GE: HACK
     {
 	buttonWidth=125;
 	buttonHeight=54;

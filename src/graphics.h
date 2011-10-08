@@ -1,7 +1,7 @@
 #ifndef _GRAPHICS_H_
 #define _GRAPHICS_ 1
 
-#include "cards.h"
+//#include "cards.h"
 
 enum {	SCREEN=0,
 		BUFFER,
@@ -37,7 +37,7 @@ int Menu();
 void DrawCard(int c,int x,int y, Uint8 a);
 void DrawCardAlpha(int c,int x,int y,Uint8 a);
 void DrawFolded(int Team, int X, int Y);
-void DrawStatus(int turn,struct Stats *Player);
+//void DrawStatus(int turn,struct Stats *Player);
 char *DialogBox(int type,const char *fmt,...);
 int InRect(int x, int y, int x1, int y1, int x2, int y2);
 void DrawRectangle(int x, int y, int w, int h, int Colour);
