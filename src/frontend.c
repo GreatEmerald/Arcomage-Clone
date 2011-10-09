@@ -7,8 +7,8 @@
 //#include "input.h"
 //#include "graphics.h"
 //#include "sound.h"
-#include "adapter.h"
 #include <stdio.h>
+#include "adapter.h"
 
 /**
  * Game termination and memory cleanup.

@@ -9,6 +9,7 @@
 //#include "common.h"
 //#include "config.h"
 #include "graphics.h"
+#include "adapter.h"
 //#include "input.h"
 //#include "sound.h"
 
@@ -28,15 +29,15 @@ BFont_Info *numssmall=NULL;
 BFont_Info *font=NULL;
 BFont_Info *bigfont=NULL;
 
+#define CPUWAIT 10 //DEBUG
+
 void Graphics_Init(int fullscreen)
 {
-    switch (OPERATINGSYSTEM)
-    {
-	case 1:
-	    LoadSurface(GetFilePath("boss_linux.png"),&GfxData[BOSS]);break;
-	default:
-	    LoadSurface(GetFilePath("boss_windows.png"),&GfxData[BOSS]);break;
-    }
+    #ifdef linux
+	    LoadSurface(GetFilePath("boss_linux.png"),&GfxData[BOSS]);
+    #else
+	    LoadSurface(GetFilePath("boss_windows.png"),&GfxData[BOSS]);
+    #endif
     if (!GetConfig(UseOriginalMenu))
     {
 	LoadSurface(GetFilePath("menu.png"),&GfxData[MENU]);
@@ -74,7 +75,7 @@ void Graphics_Init(int fullscreen)
 
     if (SDL_Init(SDL_INIT_VIDEO|SDL_INIT_NOPARACHUTE)<0)
 	FatalError("Couldn't initialize SDL");
-    SDL_WM_SetCaption("Arcomage v" ARCOVER,NULL);
+    SDL_WM_SetCaption("Arcomage Clone",NULL);
     GfxData[SCREEN]=SDL_SetVideoMode(resX,resY,0,SDL_SWSURFACE|(fullscreen*SDL_FULLSCREEN)|SDL_ASYNCBLIT|SDL_RESIZABLE); //GE: Enabling async blitting. It's useful for muticore PCs.
     if (!GfxData[SCREEN])
 	FatalError("Couldn't set 640x480 video mode");
@@ -155,7 +156,7 @@ void Graphics_Quit()
  *
  * \param turn Player number.
  */
-void DrawCards(int turn)
+/*void DrawCards(int turn) //DEBUG
 {
     int i,j;
 
@@ -194,7 +195,7 @@ void RedrawScreen(int turn, struct Stats* Player)
     //DrawStatus(turn,Player);
 	//DrawCards(turn);
 	//UpdateScreen();
-}
+}*/
 
 /**
  * Redraws all the information on the screen the hard way.
@@ -204,13 +205,13 @@ void RedrawScreen(int turn, struct Stats* Player)
  * 
  * Authors: STiCK, GreatEmerald
  */ 
-void RedrawScreenFull()
+/*void RedrawScreenFull() //DEBUG
 {
     DrawStatus(turn,Player);
 
     DrawCards(turn);
     UpdateScreen();
-}
+}*/
 
 inline void UpdateScreenRect(int x1,int y1,int x2,int y2)
 {
@@ -258,7 +259,7 @@ void NewDrawCard(int C, int X, int Y, SDL_Surface* Sourface, Uint8 Alpha)//GE: S
  * for the pointer and coords, which it then uses to display the thing.     
  */
 //GE: c - card ID, x,y - position on the screen.
-void DrawCard(int c,int x,int y, Uint8 a)
+/*void DrawCard(int c,int x,int y, Uint8 a) //DEBUG
 {
 	SDL_Rect recta,rectb;
 	int RawX, RawY;
@@ -296,7 +297,7 @@ void DrawCard(int c,int x,int y, Uint8 a)
      rectb.x=(c&0xFF)*96;rectb.y=(c>>8)*128;rectb.w=96;rectb.h=128;
 	}
 	else
-	{
+	{*/
     	/*
     	 * GE: Transform.
     	 * Got 1*96, 1*128
@@ -306,7 +307,7 @@ void DrawCard(int c,int x,int y, Uint8 a)
     	 * Original doesn't have blue, and Discard is not in a shape of a card.             
     	 */
     	
-      RawX=(c&0xFF);
+/*      RawX=(c&0xFF); //DEBUG
     	RawY=(c>>8);
     	
     	//GE: Start special case handling --------------------------------------------
@@ -357,7 +358,7 @@ void DrawFolded(int Team, int X, int Y)
     DeckPosition.w = ScreenPosition.w; DeckPosition.h = ScreenPosition.h;
     
     SDL_BlitSurface(GfxData[DECK],&DeckPosition,GfxData[SCREEN],&ScreenPosition);
-}
+}*/
 
 void DrawDiscard(int X, int Y)
 {
@@ -380,7 +381,7 @@ void DrawDiscard(int X, int Y)
  *
  * Authors: STiCK.
  */
-void Boss()
+/*void Boss() //DEBUG
 {
     Blit(SCREEN,BUFFER);
     Blit(BOSS,SCREEN);
@@ -398,7 +399,7 @@ void Boss()
     UpdateScreen();
     SDL_WM_SetCaption("Arcomage v"ARCOVER,NULL);
     WaitForKey(0);
-}
+}*/
 
 /**
  * Draws the card being played to imitate animation.
@@ -408,7 +409,7 @@ void Boss()
  * 
  * Authors: STiCK, GreatEmerald.
  */
-void PlayCardAnimation(int c, int discrd)
+/*void PlayCardAnimation(int c, int discrd) //DEBUG
 {
     #define STEPS 10
     double d,x,y;
@@ -434,7 +435,7 @@ void PlayCardAnimation(int c, int discrd)
     }
     else
         DrawCard(Player[turn].Hand[c],272,96,255);
-}
+}*/
 
 void DrawSmallNumber(int Resource, int X, int Y, int Offset)
 {
@@ -470,7 +471,7 @@ void DrawBigNumber(int Resource, int X, int Y)
     SDL_BlitSurface(GfxData[NUMSBIG],&rectb,GfxData[SCREEN],&recta);
 }
 
-void DrawStatus(int turn,struct Stats *Players)
+/*void DrawStatus(int turn,struct Stats *Players) //DEBUG
 {
 	SDL_Rect recta,rectb;
 	int i,j;
@@ -489,7 +490,7 @@ void DrawStatus(int turn,struct Stats *Players)
 	    {
             DrawSmallNumber((&Players[i].b)[j], 10+i*547, 115+j*72, Offset[j]);
             DrawBigNumber((&Players[i].q)[j], 13+547*i, 91+j*72);
-        }
+        }*/
         
         
         /*int d1, d2;
@@ -533,7 +534,7 @@ void DrawStatus(int turn,struct Stats *Players)
 		//	print small numbers (bricks,gems,recruits)
 			//BFont_PutStringFont(GfxData[SCREEN],numssmall,10+i*547,115+j*72,b);
 		//}
-    }
+    /*} //DEBUG
 //	print tower/wall numbers
 	sprintf(b,"%d",Players[0].t);BFont_PutString(GfxData[SCREEN],160-BFont_TextWidth(b)/2,317,b);
 	sprintf(b,"%d",Players[0].w);BFont_PutString(GfxData[SCREEN],242-BFont_TextWidth(b)/2,317,b);
@@ -555,7 +556,7 @@ void DrawStatus(int turn,struct Stats *Players)
 	rectb.x=68*2;rectb.y=0;rectb.w=68;rectb.h=292-(200-Players[1].w);
 	recta.x=386;recta.y=16+(200-Players[1].w);recta.w=68;recta.h=292-(200-Players[1].w);
 	SDL_BlitSurface(GfxData[CASTLE],&rectb,GfxData[SCREEN],&recta);
-}
+}*/
 
 void DrawMenuItem(int i,int active)
 {
@@ -764,7 +765,7 @@ void DoCredits()
 {
 	#define HGHT 30
 	char *text[]={
-		"Arcomage v" ARCOVER,
+		"Arcomage vAlpha" /*ARCOVER,*/
 		"by STiCK and GreatEmerald (2005-2009)",
 		"",
 		"This program was originally created",
