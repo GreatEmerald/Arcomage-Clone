@@ -8,7 +8,24 @@
 //#include "graphics.h"
 //#include "sound.h"
 #include <stdio.h>
+#include <stdlib.h>
+#include <stdarg.h>
 #include "adapter.h"
+
+/**
+ * Utility function for printing out error messages.
+ */
+
+void FatalError(char *fmt,...)
+{
+    va_list args;
+    va_start(args,fmt);
+    printf(fmt);
+    vfprintf(stderr,fmt,args);
+    fprintf(stderr,"\n");
+    va_end(args);
+    exit(3);
+}
 
 /**
  * Game termination and memory cleanup.
@@ -48,6 +65,7 @@ int main(int argc,char *argv[])
     //    case 1:
             SetPlayerInfo(Turn, "Player", 0);
             SetPlayerInfo(GetEnemy(), "AI", 1);//Player[GetEnemy()].AI = 1;
+            getchar();
             //Player[Turn].Name = "Player";
             //Player[GetEnemy()].Name = "A.I.";
             //DoGame(); //Start the input loop

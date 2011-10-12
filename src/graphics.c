@@ -29,7 +29,7 @@ BFont_Info *numssmall=NULL;
 BFont_Info *font=NULL;
 BFont_Info *bigfont=NULL;
 
-#define CPUWAIT 10 //DEBUG
+const int CPUWAIT=10; //DEBUG
 
 void Graphics_Init(int fullscreen)
 {
@@ -173,7 +173,7 @@ void Graphics_Quit()
                 DrawCard(Player[turn].Hand[i],8+106*i,342,255);
             else
                 DrawCard(Player[turn].Hand[i],8+106*i,342,CardTranslucency);
-}
+}*/
 
 void Blit(int a,int b)
 {
@@ -187,7 +187,7 @@ void UpdateScreen()
 }
 
 //GE: This function redraws the screen elements. Slow.
-void RedrawScreen(int turn, struct Stats* Player)
+/*void RedrawScreen(int turn, struct Stats* Player) //DEBUG
 {
     SDL_Flip(GfxData[SCREEN]);
     //Blit(BUFFER,SCREEN);

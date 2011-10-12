@@ -6,8 +6,8 @@
  * for reference about what parts of libarcomage you can hoop up to from C.
  */  
 
-#ifndef __DWRAPPER__
-#define __DWRAPPER__
+#ifndef __ADAPTER_H__
+#define __ADAPTER_H__
 
 int Turn;
 
