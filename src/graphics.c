@@ -2,6 +2,7 @@
 #include <stdarg.h>
 #include <string.h>
 #include <SDL.h>
+#include <SDL_opengl.h>
 #include <SDL_image.h>
 #include "BFont.h"
 //#include "resize.h"
@@ -14,11 +15,9 @@
 //#include "sound.h"
 
 SDL_Event event;
-SDL_Surface *GfxData[GFX_CNT];
+GLuint *GfxData[GFX_CNT];
 Picture* PictureHead = NULL;//GE: Linked list.
 
-int resX=640;
-int resY=480;
 int buttonWidth=160;
 int buttonHeight=32;
 int buttonDistanceX=240; //resX/2-buttonWidth/2 = 240
@@ -73,16 +72,18 @@ void Graphics_Init(int fullscreen)
 	FatalError("Data file 'font.png' is missing or corrupt.");
     BFont_SetCurrentFont(font);
 
-    if (SDL_Init(SDL_INIT_VIDEO|SDL_INIT_NOPARACHUTE)<0)
+    if (SDL_Init(SDL_INIT_VIDEO|SDL_INIT_NOPARACHUTE)<0) //GE: NOPARACHUTE means no exception handling. Could be dangerous. Could be faster.
 	FatalError("Couldn't initialize SDL");
     SDL_WM_SetCaption("Arcomage Clone",NULL);
-    GfxData[SCREEN]=SDL_SetVideoMode(resX,resY,0,SDL_SWSURFACE|(fullscreen*SDL_FULLSCREEN)|SDL_ASYNCBLIT|SDL_RESIZABLE); //GE: Enabling async blitting. It's useful for muticore PCs.
+    SDL_GL_SetAttribute( SDL_GL_DOUBLEBUFFER, 1 ); //GE: Enable OpenGL double buffer support.
+    GfxData[SCREEN]=SDL_SetVideoMode(GetConfig(ResolutionX),GetConfig(ResolutionY),0,(fullscreen*SDL_FULLSCREEN)|SDL_OPENGL); //GE: Enable OpenGL, because without it SDL is just plain bad.
     if (!GfxData[SCREEN])
 	FatalError("Couldn't set 640x480 video mode");
     GfxData[BUFFER]=SDL_AllocSurface(GfxData[SCREEN]->flags,GfxData[SCREEN]->w,GfxData[SCREEN]->h,GfxData[SCREEN]->format->BitsPerPixel,GfxData[SCREEN]->format->Rmask,GfxData[SCREEN]->format->Gmask,GfxData[SCREEN]->format->Bmask,0);
     if (!GfxData[BUFFER])
 	FatalError("Unable to create double buffer!");
-    if (!GetConfig(UseOriginalMenu)) //GE: HACK
+    InitOpenGL();
+    if (!GetConfig(UseOriginalMenu)) //GE: HACK - should be configurable
     {
 	buttonWidth=125;
 	buttonHeight=54;
@@ -659,8 +660,8 @@ char *DialogBox(int type,const char *fmt,...)
 	}
 	rect.w=352;
 	rect.h=128;
-	rect.x=(resX-rect.w) >> 1;
-	rect.y=(resY-rect.h) >> 1;
+	rect.x=(GetConfig(ResolutionX)-rect.w) >> 1;
+	rect.y=(GetConfig(ResolutionY)-rect.h) >> 1;
 	SDL_BlitSurface(GfxData[type],NULL,GfxData[SCREEN],&rect);
 	rect.w-=4;
 	rect.h-=4;
@@ -801,7 +802,7 @@ void DoCredits()
 		i=0;
 		while (text[i])
 		{
-			if (ypos+i*HGHT>=-20 && ypos+i*HGHT<=resX)
+			if (ypos+i*HGHT>=-20 && ypos+i*HGHT<=GetConfig(ResolutionX))
 				BFont_CenteredPutString(GfxData[SCREEN],ypos+i*HGHT,text[i]);
 			i++;
 		}

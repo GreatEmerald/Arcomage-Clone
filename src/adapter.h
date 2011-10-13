@@ -29,7 +29,9 @@ enum ConfigTypes {
     ResourceVictory,
     OneResourceVictory,
     UseOriginalCards,
-    UseOriginalMenu
+    UseOriginalMenu,
+    ResolutionX,
+    ResolutionY
 };
 
 void SetPlayerInfo(int PlayerNum, char* Name, char AI);

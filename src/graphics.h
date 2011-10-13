@@ -3,9 +3,9 @@
 
 //#include "cards.h"
 
-enum {	SCREEN=0,
-		BUFFER,
-		MENU,
+enum {	/*SCREEN=0,
+		BUFFER,*/
+		MENU=0,
 		MENUITEMS,
 		CREDITS,
 		DECK,
