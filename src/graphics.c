@@ -15,8 +15,9 @@
 //#include "sound.h"
 
 SDL_Event event;
-GLuint *GfxData[GFX_CNT];
-Picture* PictureHead = NULL;//GE: Linked list.
+GLuint GfxData[GFX_CNT];
+Size TextureCoordinates[GFX_CNT];
+Picture *PictureHead = NULL;//GE: Linked list.
 
 int buttonWidth=160;
 int buttonHeight=32;
@@ -32,12 +33,23 @@ const int CPUWAIT=10; //DEBUG
 
 void Graphics_Init(int fullscreen)
 {
+    if (SDL_Init(SDL_INIT_VIDEO|SDL_INIT_NOPARACHUTE)<0) //GE: NOPARACHUTE means no exception handling. Could be dangerous. Could be faster.
+	FatalError("Couldn't initialise SDL");
+    SDL_WM_SetCaption("Arcomage Clone",NULL);
+    SDL_GL_SetAttribute( SDL_GL_DOUBLEBUFFER, 1 ); //GE: Enable OpenGL double buffer support.
+    if (!SDL_SetVideoMode(GetConfig(ResolutionX),GetConfig(ResolutionY),0,(fullscreen*SDL_FULLSCREEN)|SDL_OPENGL)) //GE: Enable OpenGL, because without it SDL is just plain bad.
+	FatalError("Couldn't initialise OpenGL");
+    InitOpenGL();
+    
     #ifdef linux
-	    LoadSurface(GetFilePath("boss_linux.png"),&GfxData[BOSS]);
+	LoadSurface(GetFilePath("boss_linux.png"),BOSS);
     #else
-	    LoadSurface(GetFilePath("boss_windows.png"),&GfxData[BOSS]);
+	LoadSurface(GetFilePath("boss_windows.png"),BOSS);
     #endif
-    if (!GetConfig(UseOriginalMenu))
+    LoadSurface(GetFilePath("Sprites.PNG"),SPRITES);
+    LoadSurface(GetFilePath("Title.PNG"),TITLE);
+    LoadSurface(GetFilePath("Layout.PNG"),GAMEBG);
+    /*if (!GetConfig(UseOriginalMenu))
     {
 	LoadSurface(GetFilePath("menu.png"),&GfxData[MENU]);
 	LoadSurface(GetFilePath("menuitems.png"),&GfxData[MENUITEMS]);
@@ -51,15 +63,15 @@ void Graphics_Init(int fullscreen)
     SDL_SetColorKey(GfxData[DECK],SDL_SRCCOLORKEY,SDL_MapRGB(GfxData[DECK]->format,255,0,255));
     LoadSurface(GetFilePath("nums_big.png"),&GfxData[NUMSBIG]);
     SDL_SetColorKey(GfxData[NUMSBIG],SDL_SRCCOLORKEY,SDL_MapRGB(GfxData[NUMSBIG]->format,255,0,255));
-    LoadSurface(GetFilePath("castle.png"),&GfxData[CASTLE]);
+    LoadSurface(GetFilePath("castle.png"),&GfxData[CASTLE]);*/
 
-    LoadSurface(GetFilePath("dlgmsg.png"),&GfxData[DLGMSG]);
-    LoadSurface(GetFilePath("dlgerror.png"),&GfxData[DLGERROR]);
-    LoadSurface(GetFilePath("dlgnetwork.png"),&GfxData[DLGNETWORK]);
-    LoadSurface(GetFilePath("dlgwinner.png"),&GfxData[DLGWINNER]);
-    LoadSurface(GetFilePath("dlglooser.png"),&GfxData[DLGLOOSER]);
+    LoadSurface(GetFilePath("dlgmsg.png"),DLGMSG);
+    LoadSurface(GetFilePath("dlgerror.png"),DLGERROR);
+    LoadSurface(GetFilePath("dlgnetwork.png"),DLGNETWORK);
+    LoadSurface(GetFilePath("dlgwinner.png"),DLGWINNER);
+    LoadSurface(GetFilePath("dlglooser.png"),DLGLOOSER);
 
-    SDL_SetColorKey(GfxData[CASTLE],SDL_SRCCOLORKEY,SDL_MapRGB(GfxData[CASTLE]->format,255,0,255));
+    /*SDL_SetColorKey(GfxData[CASTLE],SDL_SRCCOLORKEY,SDL_MapRGB(GfxData[CASTLE]->format,255,0,255));
 
     numssmall=BFont_LoadFont(GetFilePath("nums_small.png"));
     if (!numssmall)
@@ -70,29 +82,7 @@ void Graphics_Init(int fullscreen)
     font=BFont_LoadFont(GetFilePath("font.png"));
     if (!font)
 	FatalError("Data file 'font.png' is missing or corrupt.");
-    BFont_SetCurrentFont(font);
-
-    if (SDL_Init(SDL_INIT_VIDEO|SDL_INIT_NOPARACHUTE)<0) //GE: NOPARACHUTE means no exception handling. Could be dangerous. Could be faster.
-	FatalError("Couldn't initialize SDL");
-    SDL_WM_SetCaption("Arcomage Clone",NULL);
-    SDL_GL_SetAttribute( SDL_GL_DOUBLEBUFFER, 1 ); //GE: Enable OpenGL double buffer support.
-    GfxData[SCREEN]=SDL_SetVideoMode(GetConfig(ResolutionX),GetConfig(ResolutionY),0,(fullscreen*SDL_FULLSCREEN)|SDL_OPENGL); //GE: Enable OpenGL, because without it SDL is just plain bad.
-    if (!GfxData[SCREEN])
-	FatalError("Couldn't set 640x480 video mode");
-    GfxData[BUFFER]=SDL_AllocSurface(GfxData[SCREEN]->flags,GfxData[SCREEN]->w,GfxData[SCREEN]->h,GfxData[SCREEN]->format->BitsPerPixel,GfxData[SCREEN]->format->Rmask,GfxData[SCREEN]->format->Gmask,GfxData[SCREEN]->format->Bmask,0);
-    if (!GfxData[BUFFER])
-	FatalError("Unable to create double buffer!");
-    InitOpenGL();
-    if (!GetConfig(UseOriginalMenu)) //GE: HACK - should be configurable
-    {
-	buttonWidth=125;
-	buttonHeight=54;
-	buttonDistanceX=257;
-	buttonDistanceY=105;
-	LoadSurface(GetFilePath("menuO.png"),&GfxData[MENU]);
-	LoadSurface(GetFilePath("menuitemsO.png"),&GfxData[MENUITEMS]);
-	LoadSurface(GetFilePath("gamebgO.png"),&GfxData[GAMEBG]);
-    }
+    BFont_SetCurrentFont(font);*/
 }
 
 //GE: Add to the linked list.
@@ -140,11 +130,11 @@ void PrecacheCard(const char* File, size_t Size)
 void Graphics_Quit()
 {
 	int i;
-	BFont_FreeFont(numssmall);
+	/*BFont_FreeFont(numssmall);
 	BFont_FreeFont(font);
-	BFont_FreeFont(bigfont);
+	BFont_FreeFont(bigfont);*/
 	for (i=0;i<GFX_CNT;i++)
-		SDL_FreeSurface(GfxData[i]);
+		FreeTextures(GfxData[i]);
 }
 
 /**
@@ -178,13 +168,15 @@ void Graphics_Quit()
 
 void Blit(int a,int b)
 {
-	SDL_BlitSurface(GfxData[a],NULL,GfxData[b],NULL);
+	printf("Warning: Blit is deprecated!");
+	//SDL_BlitSurface(GfxData[a],NULL,GfxData[b],NULL);
 }
 
 //GE: This function updates the screen. Nothing is being remade. Fast.
 void UpdateScreen()
 {
-	SDL_UpdateRect(GfxData[SCREEN],0,0,0,0);
+	SDL_GL_SwapBuffers();
+	//SDL_UpdateRect(GfxData[SCREEN],0,0,0,0);
 }
 
 //GE: This function redraws the screen elements. Slow.
@@ -216,14 +208,16 @@ void UpdateScreen()
 
 inline void UpdateScreenRect(int x1,int y1,int x2,int y2)
 {
-	SDL_UpdateRect(GfxData[SCREEN],x1,y1,x2,y2);
+	printf("Warning: UpdateScreenRect is deprecated!");
+	//SDL_UpdateRect(GfxData[SCREEN],x1,y1,x2,y2);
 }
 
 void FillRect(int x,int y,int w,int h,Uint8 r,Uint8 g,Uint8 b)
 {
-	SDL_Rect rect;
+	printf("Warning: FillRect is deprecated!");
+	/*SDL_Rect rect;
 	rect.x=x;rect.y=y;rect.w=w;rect.h=h;
-	SDL_FillRect(GfxData[SCREEN],&rect,SDL_MapRGB(GfxData[SCREEN]->format,r,g,b));
+	SDL_FillRect(GfxData[SCREEN],&rect,SDL_MapRGB(GfxData[SCREEN]->format,r,g,b));*/
 }
 
 void NewDrawCard(int C, int X, int Y, SDL_Surface* Sourface, Uint8 Alpha)//GE: SOURFACE! :(
@@ -246,7 +240,7 @@ void NewDrawCard(int C, int X, int Y, SDL_Surface* Sourface, Uint8 Alpha)//GE: S
     ScreenPosition.h = DeckPosition.h;
     
     SDL_SetAlpha(Sourface,SDL_SRCALPHA,Alpha);
-    SDL_BlitSurface(Sourface,&DeckPosition,GfxData[SCREEN],&ScreenPosition);
+    //SDL_BlitSurface(Sourface,&DeckPosition,GfxData[SCREEN],&ScreenPosition);
     SDL_SetAlpha(Sourface,SDL_SRCALPHA,255);
     printf("Finished drawing the card.\n");
 }
@@ -371,7 +365,7 @@ void DrawDiscard(int X, int Y)
     DeckPosition.x = 0; DeckPosition.y = 256;
     DeckPosition.w = ScreenPosition.w; DeckPosition.h = ScreenPosition.h;
     
-    SDL_BlitSurface(GfxData[DECK],&DeckPosition,GfxData[SCREEN],&ScreenPosition);
+    //SDL_BlitSurface(GfxData[DECK],&DeckPosition,GfxData[SCREEN],&ScreenPosition);
 }
 
 /**
@@ -445,7 +439,7 @@ void DrawSmallNumber(int Resource, int X, int Y, int Offset)
     sprintf(str, "%d", Resource);
     for (i=0; str[i]!=0; i++)
         str[i]=str[i]-'0'+Offset;
-    BFont_PutStringFont(GfxData[SCREEN],numssmall,X,Y,str);
+    //BFont_PutStringFont(GfxData[SCREEN],numssmall,X,Y,str); //DEBUG
 }
 
 void DrawBigNumber(int Resource, int X, int Y)
@@ -465,11 +459,11 @@ void DrawBigNumber(int Resource, int X, int Y)
     if (d1)
     {
        rectb.x=22*d1;
-       SDL_BlitSurface(GfxData[NUMSBIG],&rectb,GfxData[SCREEN],&recta);
+       //SDL_BlitSurface(GfxData[NUMSBIG],&rectb,GfxData[SCREEN],&recta);//DEBUG
        recta.x += 22;
     }
     rectb.x=22*d2;
-    SDL_BlitSurface(GfxData[NUMSBIG],&rectb,GfxData[SCREEN],&recta);
+    //SDL_BlitSurface(GfxData[NUMSBIG],&rectb,GfxData[SCREEN],&recta);//DEBUG
 }
 
 /*void DrawStatus(int turn,struct Stats *Players) //DEBUG
@@ -571,17 +565,16 @@ void DrawMenuItem(int i,int active)
 	recta.x=buttonDistanceX;recta.y=i*buttonHeight+buttonDistanceY;recta.w=buttonWidth;recta.h=buttonHeight;
 	rectb.x=active*buttonWidth;rectb.y=i*buttonHeight;rectb.w=buttonWidth;rectb.h=buttonHeight;
 
-	if (active)
+	/*if (active)
 		SDL_BlitSurface(GfxData[MENUITEMS],&rectb,GfxData[SCREEN],&recta);
 	else 
-		SDL_BlitSurface(GfxData[MENUITEMS],&rectb,GfxData[SCREEN],&recta);
+		SDL_BlitSurface(GfxData[MENUITEMS],&rectb,GfxData[SCREEN],&recta);*/
 }
 
 int Menu()
 {
 	int i,j,value=0;
 
-	SDL_BlitSurface(GfxData[MENU],NULL,GfxData[SCREEN],NULL);
 	for (i=0;i<buttonNum;i++)
 		DrawMenuItem(i,0);
 	
@@ -601,7 +594,7 @@ int Menu()
 			j=(event.motion.y-buttonDistanceY)/buttonHeight;
 			for (i=0;i<buttonNum;i++)
 				DrawMenuItem(i,(i==j)&&(event.motion.x>=buttonDistanceX) && (event.motion.x<=buttonDistanceX+buttonWidth) && (event.motion.y>=buttonDistanceY) && (event.motion.y<=buttonDistanceY+buttonHeight*buttonNum));
-			SDL_UpdateRect(GfxData[SCREEN],buttonDistanceX,buttonDistanceY,buttonDistanceX+buttonWidth,buttonDistanceY+buttonHeight*buttonNum);
+			//SDL_UpdateRect(GfxData[SCREEN],buttonDistanceX,buttonDistanceY,buttonDistanceX+buttonWidth,buttonDistanceY+buttonHeight*buttonNum);
 			break;
 		case SDL_MOUSEBUTTONUP:
 			if ((event.button.button==SDL_BUTTON_LEFT) && InRect(event.button.x, event.button.y,buttonDistanceX,buttonDistanceY,buttonDistanceX+buttonWidth,buttonDistanceY+buttonHeight*buttonNum))
@@ -614,6 +607,14 @@ int Menu()
 		SDL_Delay(CPUWAIT);
 	}
 	return value;
+}
+
+void DrawGUIElements()
+{
+    SDL_Rect SourceCoords = {0, 0, 640, 311};
+    Size DestinationCoords = {0, 0};
+    DrawTexture(GfxData[GAMEBG], TextureCoordinates[GAMEBG], SourceCoords, DestinationCoords);
+    UpdateScreen();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -662,7 +663,7 @@ char *DialogBox(int type,const char *fmt,...)
 	rect.h=128;
 	rect.x=(GetConfig(ResolutionX)-rect.w) >> 1;
 	rect.y=(GetConfig(ResolutionY)-rect.h) >> 1;
-	SDL_BlitSurface(GfxData[type],NULL,GfxData[SCREEN],&rect);
+	//SDL_BlitSurface(GfxData[type],NULL,GfxData[SCREEN],&rect);//FIXME
 	rect.w-=4;
 	rect.h-=4;
 	rect.x+=2;
@@ -672,9 +673,9 @@ char *DialogBox(int type,const char *fmt,...)
 		BFont_SetCurrentFont(bigfont);
 	
 	h=BFont_FontHeight(BFont_GetCurrentFont());
-	for (i=0;i<cnt;i++)
+	/*for (i=0;i<cnt;i++)
 		BFont_CenteredPutString(GfxData[SCREEN],240-h*cnt/2+h*i,ptr[i]);
-	UpdateScreenRect(rect.x-2,rect.y-2,rect.w+4,rect.h+4);
+	UpdateScreenRect(rect.x-2,rect.y-2,rect.w+4,rect.h+4);*///FIXME
 	
 	if (type==DLGWINNER || type==DLGLOOSER)
 		BFont_SetCurrentFont(font);
@@ -691,13 +692,13 @@ char *DialogBox(int type,const char *fmt,...)
 		rect.y=272;
 		rect.w=320;
 		rect.h=16;
-		SDL_FillRect(GfxData[SCREEN],&rect,0);
+		//SDL_FillRect(GfxData[SCREEN],&rect,0);
 		i=BFont_TextWidth(val);
-		if (i<312)
+		/*if (i<312)
 			BFont_PutString(GfxData[SCREEN],164,276,val);
 		else
 			BFont_PutString(GfxData[SCREEN],164+(312-i),276,val);
-		SDL_UpdateRect(GfxData[SCREEN],160,272,320,16);
+		SDL_UpdateRect(GfxData[SCREEN],160,272,320,16);*/ //FIXME 
 
 		while (event.type!=SDL_KEYDOWN)
 		{
@@ -741,10 +742,14 @@ int InRect(int x, int y, int x1, int y1, int x2, int y2)
 	return (x>=x1)&&(x<=x2)&&(y>=y1)&&(y<=y2);
 }
 
-void LoadSurface(char *filename,SDL_Surface **surface)
+void LoadSurface(char* filename, int Slot)
 {
-	*surface=IMG_Load(filename);
-	if (!*surface) FatalError("File '%s' is missing or corrupt.",filename);
+	SDL_Surface* Surface; Surface = IMG_Load(filename);
+	if (!Surface)
+	    FatalError("File '%s' is missing or corrupt.",filename);
+	GfxData[Slot] = SurfaceToTexture(Surface);
+	TextureCoordinates[Slot].X = Surface.w; TextureCoordinates[Slot].Y = Surface.h;
+	SDL_FreeSurface(Surface);
 }
 
 void DrawRectangle(int x, int y, int w, int h, int Colour)
@@ -752,14 +757,14 @@ void DrawRectangle(int x, int y, int w, int h, int Colour)
     SDL_Rect rec;
     
     //GE: 4 "fill" rects.
-	rec.x=x; rec.y=y; rec.w=w; rec.h=1;
+	/*rec.x=x; rec.y=y; rec.w=w; rec.h=1; //DEPRECATED
 	SDL_FillRect(GfxData[SCREEN], &rec, Colour);
 	rec.x=x; rec.y=y; rec.w=1; rec.h=h;
 	SDL_FillRect(GfxData[SCREEN], &rec, Colour);
 	rec.x=x+w-1; rec.y=y; rec.w=1; rec.h=h;
 	SDL_FillRect(GfxData[SCREEN], &rec, Colour);
 	rec.x=x; rec.y=y+h-1; rec.w=w; rec.h=1;
-	SDL_FillRect(GfxData[SCREEN], &rec, Colour);
+	SDL_FillRect(GfxData[SCREEN], &rec, Colour);*/
 }
 
 void DoCredits()
@@ -794,17 +799,17 @@ void DoCredits()
 		"",
 		NULL
 	};
-	int i,ypos=resY;
+	int i,ypos=GetConfig(ResolutionY);
 	BFont_SetCurrentFont(bigfont);
 	while (event.type!=SDL_KEYDOWN || event.key.keysym.sym!=SDLK_ESCAPE)
 	{
-		Blit(CREDITS,SCREEN);
+		//Blit(CREDITS,SCREEN);
 		i=0;
 		while (text[i])
 		{
-			if (ypos+i*HGHT>=-20 && ypos+i*HGHT<=GetConfig(ResolutionX))
+			/*if (ypos+i*HGHT>=-20 && ypos+i*HGHT<=GetConfig(ResolutionX))
 				BFont_CenteredPutString(GfxData[SCREEN],ypos+i*HGHT,text[i]);
-			i++;
+			i++;*///FIXME
 		}
 		UpdateScreen();
 		SDL_Delay(20);

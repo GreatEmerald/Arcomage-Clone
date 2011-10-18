@@ -3,13 +3,14 @@
 
 //#include "cards.h"
 
-enum {	/*SCREEN=0,
+enum {
+		/*SCREEN=0,
 		BUFFER,*/
-		MENU=0,
+		TITLE=0,
 		SPRITES,
 		CREDITS,
 		//DECK,
-		NUMSBIG,
+		//NUMSBIG,
 		GAMEBG,
 		//CASTLE,
 		BOSS,
@@ -19,7 +20,19 @@ enum {	/*SCREEN=0,
 		DLGERROR,
 		DLGMSG,
 		ORIGINALSPRITES,
-		GFX_CNT};
+		GFX_CNT
+};
+
+typedef struct PictureInfo{
+    char* File;
+    SDL_Surface* Surface;
+    struct PictureInfo* Next;
+} Picture; //GE: Pointers EVERYWHERE!
+
+typedef struct S_Range
+{
+	int X; int Y;
+} Size;
 void PrecacheCard(const char* File, size_t Size);
 
 void Graphics_Init(int fullscreen);
@@ -37,7 +50,7 @@ void DrawFolded(int Team, int X, int Y);
 char *DialogBox(int type,const char *fmt,...);
 int InRect(int x, int y, int x1, int y1, int x2, int y2);
 void DrawRectangle(int x, int y, int w, int h, int Colour);
-void LoadSurface(char *filename,SDL_Surface **surface);
+void LoadSurface(char* filename, int Slot);
 void DoCredits();
 
 #endif

@@ -23,7 +23,7 @@ void InitOpenGL()
     glMatrixMode( GL_PROJECTION ); //Set the output to be a projection (2D plane).
     glLoadIdentity();
      
-    glOrtho(0.0f, GetConfig(ResolutionX), GetConfig(ResolutionY), 0.0f, -1.0f, 1.0f); //Set the coordinates to not be wacky - 1 unit is a pixel
+    glOrtho(0.0f, 1.0f, 1.0f, 0.0f, -1.0f, 1.0f); //Set the coordinates to not be wacky - 1 unit is a pixel
      
     glMatrixMode( GL_MODELVIEW ); //Set to show models.
 }
@@ -68,4 +68,39 @@ GLuint SurfaceToTexture(SDL_Surface surface)
     // Edit the texture object's image data using the information SDL_Surface gives us
     glTexImage2D( GL_TEXTURE_2D, 0, nOfColors, surface->w, surface->h, 0,
                       texture_format, GL_UNSIGNED_BYTE, surface->pixels );
+    
+    
+    return texture;
+}
+
+void FreeTextures(GLuint Texture)
+{
+    if (glIsTexture(Texture))
+        glDeleteTextures(1, &Texture);
+}
+
+void DrawTexture(GLuint Texture, Size TexSize, SDL_Rect SourceCoords, Size DestinationCoords)
+{
+    int ResX = GetConfig(ResolutionX);
+    int ResY = GetConfig(ResolutionY);
+    // Bind the texture to which subsequent calls refer to
+    glBindTexture( GL_TEXTURE_2D, Texture );
+     
+    glBegin( GL_QUADS );
+        //Top-left vertex (corner)
+        glTexCoord2f( SourceCoords.x/TexSize.X, SourceCoords.y/TexSize.Y );
+        glVertex2f( DestinationCoords.X, DestinationCoords.Y);
+     
+        //Top-right vertex (corner)
+        glTexCoord2f( SourceCoords.x+SourceCoords.w/TexSize.X, SourceCoords.y/TexSize.Y );
+        glVertex2f( DestinationCoords.X+SourceCoords.w/ResX, DestinationCoords.Y);
+     
+        //Bottom-right vertex (corner)
+        glTexCoord2f( SourceCoords.x+SourceCoords.w/TexSize.X, SourceCoords.y+SourceCoords.h/TexSize.Y );
+        glVertex2f( DestinationCoords.X+SourceCoords.w/ResX, DestinationCoords.Y+SourceCoords.h/ResY);
+     
+        //Bottom-left vertex (corner)
+        glTexCoord2f( SourceCoords.x/TexSize.X, SourceCoords.y+SourceCoords.h/TexSize.Y );
+        glVertex2f( DestinationCoords.X, DestinationCoords.Y+SourceCoords.h/ResY);
+    glEnd();
 }
