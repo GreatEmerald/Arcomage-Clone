@@ -6,24 +6,20 @@
 enum {	/*SCREEN=0,
 		BUFFER,*/
 		MENU=0,
-		MENUITEMS,
+		SPRITES,
 		CREDITS,
-		DECK,
+		//DECK,
 		NUMSBIG,
 		GAMEBG,
-		CASTLE,
+		//CASTLE,
 		BOSS,
 		DLGWINNER,
 		DLGLOOSER,
 		DLGNETWORK,
 		DLGERROR,
 		DLGMSG,
+		ORIGINALSPRITES,
 		GFX_CNT};
-typedef struct PictureInfo{
-    char* File;
-    SDL_Surface* Surface;
-    struct PictureInfo* Next;
-} Picture; //GE: Pointers EVERYWHERE!
 void PrecacheCard(const char* File, size_t Size);
 
 void Graphics_Init(int fullscreen);
