@@ -35,6 +35,9 @@ enum ConfigTypes {
 };
 
 void SetPlayerInfo(int PlayerNum, char* Name, char AI);
+void SetSoundPlay(void (*SoundPlay) (int));
+void SetRedrawScreen(void (*RedrawScreen) () );
+void SetPlayCardAnimation(void (*PlayCardAnimation) (int, int) );
 int GetConfig(int Type);
 
 char* GetFilePath(char* FileName);

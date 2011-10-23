@@ -11,6 +11,7 @@
 //#include "config.h"
 #include "graphics.h"
 #include "adapter.h"
+#include "opengl.h"
 //#include "input.h"
 //#include "sound.h"
 
@@ -31,8 +32,10 @@ BFont_Info *bigfont=NULL;
 
 const int CPUWAIT=10; //DEBUG
 
-void Graphics_Init(int fullscreen)
+void Graphics_Init()
 {
+    char fullscreen = GetConfig(Fullscreen);
+    
     if (SDL_Init(SDL_INIT_VIDEO|SDL_INIT_NOPARACHUTE)<0) //GE: NOPARACHUTE means no exception handling. Could be dangerous. Could be faster.
 	FatalError("Couldn't initialise SDL");
     SDL_WM_SetCaption("Arcomage Clone",NULL);
@@ -222,14 +225,13 @@ void FillRect(int x,int y,int w,int h,Uint8 r,Uint8 g,Uint8 b)
 
 void NewDrawCard(int C, int X, int Y, SDL_Surface* Sourface, Uint8 Alpha)//GE: SOURFACE! :(
 {
-    SDL_Rect ScreenPosition, DeckPosition;
+    //SDL_Rect ScreenPosition, DeckPosition;
     //printf("Incoming crash!\n");
     //printf("We got the coordinates: %d:%d; %d:%d\n", D_getPictureCoords(0,C).x, D_getPictureCoords(0,C).y, D_getPictureCoords(0,C).w, D_getPictureCoords(0,C).h);
     //DeckPosition = D_getPictureCoords(0,C);
-    printf("On this C platform, ints are sized %d!\n", sizeof(int));
-    printf("On this C platform, shorts are sized %d!", sizeof(int16_t));
+    printf("Warning: NewDrawCard: Function is obsolete!\n");
     //GE: HACK!
-    DeckPosition.x = (int16_t) D_getPictureCoordX(0,C);
+    /*DeckPosition.x = (int16_t) D_getPictureCoordX(0,C);
     DeckPosition.y = (int16_t) D_getPictureCoordY(0,C);
     DeckPosition.w = (uint16_t) D_getPictureCoordW(0,C);
     DeckPosition.h = (uint16_t) D_getPictureCoordH(0,C);
@@ -242,7 +244,7 @@ void NewDrawCard(int C, int X, int Y, SDL_Surface* Sourface, Uint8 Alpha)//GE: S
     SDL_SetAlpha(Sourface,SDL_SRCALPHA,Alpha);
     //SDL_BlitSurface(Sourface,&DeckPosition,GfxData[SCREEN],&ScreenPosition);
     SDL_SetAlpha(Sourface,SDL_SRCALPHA,255);
-    printf("Finished drawing the card.\n");
+    printf("Finished drawing the card.\n");*/
 }
 
 /*
@@ -612,12 +614,25 @@ int Menu()
 void DrawGUIElements()
 {
     SDL_Rect SourceCoords = {0, 0, 640, 311};
-    Size DestinationCoords = {0, 0};
-    DrawTexture(GfxData[GAMEBG], TextureCoordinates[GAMEBG], SourceCoords, DestinationCoords);
+    SizeF BoundingBox = {800.f/(float)GetConfig(ResolutionX), 300.f/(float)GetConfig(ResolutionY)};
+    float DrawScale = FMax(BoundingBox.X/((float)TextureCoordinates[GAMEBG].X/(float)GetConfig(ResolutionX)), BoundingBox.Y/((float)TextureCoordinates[GAMEBG].Y/(float)GetConfig(ResolutionY)));
+    SizeF NewSize = {((float)TextureCoordinates[GAMEBG].X/(float)GetConfig(ResolutionX))*DrawScale, ((float)TextureCoordinates[GAMEBG].Y/(float)GetConfig(ResolutionY))*DrawScale};
+    SizeF Pivot = {(BoundingBox.X-NewSize.X)/2.f, (BoundingBox.Y-NewSize.Y)/2.f};
+    SizeF DestinationCoords = {Pivot.X+0.f, Pivot.Y+(BoundingBox.Y/2.f)};
+    printf("Info: DrawGUIElements: DrawScale is %f\n", DrawScale);
+    DrawTexture(GfxData[GAMEBG], TextureCoordinates[GAMEBG], SourceCoords, DestinationCoords, DrawScale);
     UpdateScreen();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+
+float FMax(float A, float B)
+{
+    if (A >= B)
+        return A;
+    else
+        return B;
+}
 
 int ValidInputChar(int c)
 {
@@ -748,7 +763,7 @@ void LoadSurface(char* filename, int Slot)
 	if (!Surface)
 	    FatalError("File '%s' is missing or corrupt.",filename);
 	GfxData[Slot] = SurfaceToTexture(Surface);
-	TextureCoordinates[Slot].X = Surface.w; TextureCoordinates[Slot].Y = Surface.h;
+	TextureCoordinates[Slot].X = (*Surface).w; TextureCoordinates[Slot].Y = (*Surface).h;
 	SDL_FreeSurface(Surface);
 }
 

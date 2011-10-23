@@ -29,13 +29,17 @@ typedef struct PictureInfo{
     struct PictureInfo* Next;
 } Picture; //GE: Pointers EVERYWHERE!
 
-typedef struct S_Range
+typedef struct S_Size
 {
 	int X; int Y;
 } Size;
+typedef struct S_Range
+{
+	float X; float Y;
+} SizeF;
 void PrecacheCard(const char* File, size_t Size);
 
-void Graphics_Init(int fullscreen);
+void Graphics_Init();
 void Graphics_Quit();
 void Blit(int a,int b);
 void UpdateScreen();
@@ -52,5 +56,6 @@ int InRect(int x, int y, int x1, int y1, int x2, int y2);
 void DrawRectangle(int x, int y, int w, int h, int Colour);
 void LoadSurface(char* filename, int Slot);
 void DoCredits();
+float FMax(float A, float B);
 
 #endif
