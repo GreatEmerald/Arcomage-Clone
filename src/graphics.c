@@ -622,6 +622,18 @@ void DrawGUIElements()
     printf("Info: DrawGUIElements: DrawScale is %f\n", DrawScale);
     DrawTexture(GfxData[GAMEBG], TextureCoordinates[GAMEBG], SourceCoords, DestinationCoords, DrawScale);
     UpdateScreen();
+    SizeF DestCoords = {0.0, 0.0};
+    SizeF DestWH = {1.f, 129.f/600.f};
+    SDL_Colour RectCol = {0,16,8,255};
+    DrawRectangle(DestCoords, DestWH, RectCol);
+    DestCoords.Y = (600.0-129.0)/600.0;
+    DrawRectangle(DestCoords, DestWH, RectCol);
+    DestCoords.Y = 129.0/600.0;
+    DestWH.Y = 21.0/600.0;
+    SDL_Colour RectColA = {0,255,0,255};
+    SDL_Colour RectColB = {0,16,8,255};
+    DrawGradient(DestCoords, DestWH, RectColA, RectColB);
+    UpdateScreen();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -767,9 +779,9 @@ void LoadSurface(char* filename, int Slot)
 	SDL_FreeSurface(Surface);
 }
 
-void DrawRectangle(int x, int y, int w, int h, int Colour)
+/*void DrawRectangle(int x, int y, int w, int h, int Colour)
 {
-    SDL_Rect rec;
+    SDL_Rect rec;*/
     
     //GE: 4 "fill" rects.
 	/*rec.x=x; rec.y=y; rec.w=w; rec.h=1; //DEPRECATED
@@ -780,7 +792,7 @@ void DrawRectangle(int x, int y, int w, int h, int Colour)
 	SDL_FillRect(GfxData[SCREEN], &rec, Colour);
 	rec.x=x; rec.y=y+h-1; rec.w=w; rec.h=1;
 	SDL_FillRect(GfxData[SCREEN], &rec, Colour);*/
-}
+//}
 
 void DoCredits()
 {

@@ -125,3 +125,25 @@ void DrawTexture(GLuint Texture, Size TexSize, SDL_Rect SourceCoords, SizeF Dest
         printf("Info: DrawTexture: Drawing glTexCoord2f(%f, %f); glVertex2f(%f, %f)\n", (float)SourceCoords.x/(float)TexSize.X, (float)SourceCoords.y+(float)SourceCoords.h/(float)TexSize.Y, (float)DestinationCoords.X, (float)DestinationCoords.Y+DestinationH/(float)ResY);
     glEnd();
 }
+
+void DrawRectangle(SizeF DestinationCoords, SizeF DestinationWH, SDL_Colour Colour)
+{
+    glDisable(GL_TEXTURE_2D); //We need a solid colour, thus texturing support is irrelevant. Also, this does not affect things we have already rendered.
+    glColor4f((float)Colour.r/255.0, (float)Colour.g/255.0, (float)Colour.b/255.0, (float)Colour.unused/255.0);
+    glRectf(DestinationCoords.X, DestinationCoords.Y, DestinationCoords.X+DestinationWH.X, DestinationCoords.Y+DestinationWH.Y);
+    glEnable(GL_TEXTURE_2D);
+}
+
+void DrawGradient(SizeF DestinationCoords, SizeF DestinationWH, SDL_Colour ColourA, SDL_Colour ColourB)
+{
+    glDisable(GL_TEXTURE_2D); //We need a solid colour, thus texturing support is irrelevant. Also, this does not affect things we have already rendered.
+    glBegin(GL_POLYGON);
+        glColor4f((float)ColourA.r/255.0, (float)ColourA.g/255.0, (float)ColourA.b/255.0, (float)ColourA.unused/255.0);
+        glVertex2f(DestinationCoords.X, DestinationCoords.Y);
+        glVertex2f(DestinationCoords.X+DestinationWH.X, DestinationCoords.Y);
+        glColor4f((float)ColourB.r/255.0, (float)ColourB.g/255.0, (float)ColourB.b/255.0, (float)ColourB.unused/255.0);
+        glVertex2f(DestinationCoords.X+DestinationWH.X, DestinationCoords.Y+DestinationWH.Y);
+        glVertex2f(DestinationCoords.X, DestinationCoords.Y+DestinationWH.Y);
+    glEnd();
+    glEnable(GL_TEXTURE_2D);
+}

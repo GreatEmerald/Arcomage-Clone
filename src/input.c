@@ -113,7 +113,7 @@ void DoGame()
                 if ( event.type == SDL_MOUSEMOTION && InRect(event.motion.x, event.motion.y,   8,342,  8+94,468) ) //GE: Support for highlighting cards, to be done: card tooltips.
                 {
                     Blit(SCREEN, BUFFER);
-                    DrawRectangle(8,342,96,128, 0xFF0000);
+                    //DrawRectangle(8,342,96,128, 0xFF0000);//OBSOLETE
                     UpdateScreen();
                     bRefreshNeeded=1;
                 }

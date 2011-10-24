@@ -53,7 +53,7 @@ void DrawFolded(int Team, int X, int Y);
 //void DrawStatus(int turn,struct Stats *Player);
 char *DialogBox(int type,const char *fmt,...);
 int InRect(int x, int y, int x1, int y1, int x2, int y2);
-void DrawRectangle(int x, int y, int w, int h, int Colour);
+//void DrawRectangle(int x, int y, int w, int h, int Colour);
 void LoadSurface(char* filename, int Slot);
 void DoCredits();
 float FMax(float A, float B);

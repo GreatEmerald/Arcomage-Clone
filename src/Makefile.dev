@@ -7,7 +7,7 @@ all: $(BIN)
 # $(BINSERVER)
 
 clean:
-	rm -f frontend.o adapter.o graphics.o BFont.o $(BIN) $(BINSERVER)
+	rm -f frontend.o adapter.o graphics.o BFont.o opengl.o $(BIN) $(BINSERVER)
 
 #GE: This line is repeated when linking. This is linking.
 $(BIN): frontend.o adapter.o graphics.o BFont.o opengl.o
