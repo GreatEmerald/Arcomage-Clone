@@ -57,5 +57,6 @@ int InRect(int x, int y, int x1, int y1, int x2, int y2);
 void LoadSurface(char* filename, int Slot);
 void DoCredits();
 float FMax(float A, float B);
+float FMin(float A, float B);
 
 #endif

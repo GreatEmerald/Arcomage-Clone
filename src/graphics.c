@@ -613,26 +613,68 @@ int Menu()
 
 void DrawGUIElements()
 {
+    int i;
+    float ResX = (float)GetConfig(ResolutionX);
+    float ResY = (float)GetConfig(ResolutionY);
+    
+    //GE: Draw the background. The whole system is a difficult way of caltulating the bounding box to fit the thing in without stretching.
     SDL_Rect SourceCoords = {0, 0, 640, 311};
     SizeF BoundingBox = {800.f/(float)GetConfig(ResolutionX), 300.f/(float)GetConfig(ResolutionY)};
     float DrawScale = FMax(BoundingBox.X/((float)TextureCoordinates[GAMEBG].X/(float)GetConfig(ResolutionX)), BoundingBox.Y/((float)TextureCoordinates[GAMEBG].Y/(float)GetConfig(ResolutionY)));
     SizeF NewSize = {((float)TextureCoordinates[GAMEBG].X/(float)GetConfig(ResolutionX))*DrawScale, ((float)TextureCoordinates[GAMEBG].Y/(float)GetConfig(ResolutionY))*DrawScale};
     SizeF Pivot = {(BoundingBox.X-NewSize.X)/2.f, (BoundingBox.Y-NewSize.Y)/2.f};
     SizeF DestinationCoords = {Pivot.X+0.f, Pivot.Y+(BoundingBox.Y/2.f)};
-    printf("Info: DrawGUIElements: DrawScale is %f\n", DrawScale);
     DrawTexture(GfxData[GAMEBG], TextureCoordinates[GAMEBG], SourceCoords, DestinationCoords, DrawScale);
     UpdateScreen();
+    
+    //GE: Draw the card area backgrounds.
     SizeF DestCoords = {0.0, 0.0};
     SizeF DestWH = {1.f, 129.f/600.f};
     SDL_Colour RectCol = {0,16,8,255};
     DrawRectangle(DestCoords, DestWH, RectCol);
     DestCoords.Y = (600.0-129.0)/600.0;
     DrawRectangle(DestCoords, DestWH, RectCol);
+    
+    //GE: Draw the gradients on top and bottom of the screen.
     DestCoords.Y = 129.0/600.0;
-    DestWH.Y = 21.0/600.0;
-    SDL_Colour RectColA = {0,255,0,255};
-    SDL_Colour RectColB = {0,16,8,255};
+    DestWH.Y = 14.3/600.0;
+    SDL_Colour RectColA = {0,16,8,255};
+    SDL_Colour RectColB = {16,66,41,255};
     DrawGradient(DestCoords, DestWH, RectColA, RectColB);
+    DestCoords.Y = 143.3/600.0;
+    DestWH.Y = 7.7/600.0;
+    RectColA.r=16; RectColA.g=66; RectColA.b=41;
+    RectColB.r=57; RectColB.g=115; RectColB.b=82;
+    DrawGradient(DestCoords, DestWH, RectColA, RectColB);
+    
+    DestCoords.Y = 450.0/600.0;
+    DestWH.Y = 7.7/600.0;
+    RectColA.r=57; RectColA.g=115; RectColA.b=82;
+    RectColB.r=16; RectColB.g=66; RectColB.b=41;
+    DrawGradient(DestCoords, DestWH, RectColA, RectColB);
+    DestCoords.Y = (450.0+7.7)/600.0;
+    DestWH.Y = 14.3/600.0;
+    RectColA.r=16; RectColA.g=66; RectColA.b=41;
+    RectColB.r=0; RectColB.g=16; RectColB.b=8;
+    DrawGradient(DestCoords, DestWH, RectColA, RectColB);
+    
+    //GE: Draw menu buttons.
+    DrawScale=FMin((float)ResX/1600.0, (float)ResY/1200.0);
+    
+    for (i=0; i<3; i++) //GE: I <3 top buttons.
+    {
+	SourceCoords.x=0; SourceCoords.y=108*i; SourceCoords.w=250; SourceCoords.h=108;
+	DestinationCoords.X = ((2.0*i+1.0)/6.0)-(((float)(SourceCoords.w*DrawScale)/ResX)/2.0); DestinationCoords.Y = ((130.0/600.0)-((float)(SourceCoords.h*DrawScale)/600.0))/2.0;
+	DrawTexture(GfxData[SPRITES], TextureCoordinates[SPRITES], SourceCoords, DestinationCoords, DrawScale);
+    }
+    
+    for (i=0; i<3; i++) //GE: I <3 bottom buttons.
+    {
+	SourceCoords.x=250*2; SourceCoords.y=108*i; SourceCoords.w=250; SourceCoords.h=108;
+	DestinationCoords.X = ((2.0*i+1.0)/6.0)-(((float)(SourceCoords.w*DrawScale)/ResX)/2.0); DestinationCoords.Y = ((600.0-130.0/2.0)-(float)(SourceCoords.h*DrawScale)/2.0)/600.0;
+	DrawTexture(GfxData[SPRITES], TextureCoordinates[SPRITES], SourceCoords, DestinationCoords, DrawScale);
+    }
+    
     UpdateScreen();
 }
 
@@ -641,6 +683,14 @@ void DrawGUIElements()
 float FMax(float A, float B)
 {
     if (A >= B)
+        return A;
+    else
+        return B;
+}
+
+float FMin(float A, float B)
+{
+    if (A <= B)
         return A;
     else
         return B;
