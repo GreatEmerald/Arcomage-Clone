@@ -66,7 +66,8 @@ int main(int argc,char *argv[])
     //    case 1:
             SetPlayerInfo(Turn, "Player", 0);
             SetPlayerInfo(GetEnemy(), "AI", 1);//Player[GetEnemy()].AI = 1;
-            getchar();
+            Menu();
+            //getchar();
             //Player[Turn].Name = "Player";
             //Player[GetEnemy()].Name = "A.I.";
             //DoGame(); //Start the input loop

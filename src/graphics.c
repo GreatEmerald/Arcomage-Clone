@@ -20,12 +20,6 @@ GLuint GfxData[GFX_CNT];
 Size TextureCoordinates[GFX_CNT];
 Picture *PictureHead = NULL;//GE: Linked list.
 
-int buttonWidth=160;
-int buttonHeight=32;
-int buttonDistanceX=240; //resX/2-buttonWidth/2 = 240
-int buttonDistanceY=160; //resY/2-buttonHeight/2*5 = 160
-int buttonNum=5;
-
 BFont_Info *numssmall=NULL;
 BFont_Info *font=NULL;
 BFont_Info *bigfont=NULL;
@@ -555,29 +549,38 @@ void DrawBigNumber(int Resource, int X, int Y)
 	SDL_BlitSurface(GfxData[CASTLE],&rectb,GfxData[SCREEN],&recta);
 }*/
 
-void DrawMenuItem(int i,int active)
+//GE: Draw menu buttons.
+void DrawMenuItem(int Type, char Lit)
 {
-	SDL_Rect recta,rectb;
-
-	//GE: x=distance from left border, y=number*height+distance from top border
-	//w=width, h=height; rectb is location in file, x=activated*width, y=number*height
-	//w=width, h=height.
-	//recta.x=240;recta.y=i*32+160;recta.w=160;recta.h=32;
-	//rectb.x=active*160;rectb.y=i*32;rectb.w=160;rectb.h=32;
-	recta.x=buttonDistanceX;recta.y=i*buttonHeight+buttonDistanceY;recta.w=buttonWidth;recta.h=buttonHeight;
-	rectb.x=active*buttonWidth;rectb.y=i*buttonHeight;rectb.w=buttonWidth;rectb.h=buttonHeight;
-
-	/*if (active)
-		SDL_BlitSurface(GfxData[MENUITEMS],&rectb,GfxData[SCREEN],&recta);
-	else 
-		SDL_BlitSurface(GfxData[MENUITEMS],&rectb,GfxData[SCREEN],&recta);*/
+    SDL_Rect SourceCoords = {0,0,0,0}; //GE: Make sure they are initialised.
+    SizeF DestinationCoords = {0.0,0.0};
+    float ResX = (float)GetConfig(ResolutionX);
+    float ResY = (float)GetConfig(ResolutionY);
+    float DrawScale = FMin((float)ResX/1600.0, (float)ResY/1200.0);
+    
+    printf("Info: DrawMenuItem: Lit is %d\n", (int)Lit);
+    
+    if (Type < 3)
+    {
+	SourceCoords.x=0+250*Lit; SourceCoords.y=108*Type; SourceCoords.w=250; SourceCoords.h=108;
+	DestinationCoords.X = ((2.0*Type+1.0)/6.0)-(((float)(SourceCoords.w*DrawScale)/ResX)/2.0); DestinationCoords.Y = ((130.0/600.0)-((float)(SourceCoords.h*DrawScale)/600.0))/2.0;
+    }
+    else
+    {
+	SourceCoords.x=250*2+250*Lit; SourceCoords.y=108*Type; SourceCoords.w=250; SourceCoords.h=108;
+	DestinationCoords.X = ((2.0*Type+1.0)/6.0)-(((float)(SourceCoords.w*DrawScale)/ResX)/2.0); DestinationCoords.Y = ((600.0-130.0/2.0)-(float)(SourceCoords.h*DrawScale)/2.0)/600.0;
+    }
+    DrawTexture(GfxData[SPRITES], TextureCoordinates[SPRITES], SourceCoords, DestinationCoords, DrawScale);
 }
 
 int Menu()
 {
-	int i,j,value=0;
+	int i,/*j,*/value=0;
+	float ResX = (float)GetConfig(ResolutionX);
+	float ResY = (float)GetConfig(ResolutionY);
+	float DrawScale = FMin((float)ResX/1600.0, (float)ResY/1200.0);
 
-	for (i=0;i<buttonNum;i++)
+	for (i=0;i<6;i++)
 		DrawMenuItem(i,0);
 	
 	UpdateScreen();
@@ -590,23 +593,30 @@ int Menu()
 		switch (event.type)
 		{
 		case SDL_QUIT:
-			value=5;
+			value=Quit;
 			break;
 		case SDL_MOUSEMOTION:
-			j=(event.motion.y-buttonDistanceY)/buttonHeight;
-			for (i=0;i<buttonNum;i++)
-				DrawMenuItem(i,(i==j)&&(event.motion.x>=buttonDistanceX) && (event.motion.x<=buttonDistanceX+buttonWidth) && (event.motion.y>=buttonDistanceY) && (event.motion.y<=buttonDistanceY+buttonHeight*buttonNum));
-			//SDL_UpdateRect(GfxData[SCREEN],buttonDistanceX,buttonDistanceY,buttonDistanceX+buttonWidth,buttonDistanceY+buttonHeight*buttonNum);
+			for (i=0; i<3; i++)
+			{
+			    if ((float)event.motion.x/ResX >= (2.0*i+1.0)/6.0-(250.0*DrawScale/ResX/2.0) //GE: These correspond to entries in DrawMenuItem().
+				&& (float)event.motion.x/ResX <= (2.0*i+1.0)/6.0+(250.0*DrawScale/ResX/2.0) //GE: FIXME: Needs to draw things only if necessary, not all the time.
+				&& (float)event.motion.y/ResX >= ((130.0/600.0)-(108.0*DrawScale/600.0))/2.0
+				&& (float)event.motion.y/ResX <= ((130.0/600.0)+(108.0*DrawScale/600.0))/2.0)
+				DrawMenuItem(i, 1);
+			    else
+				DrawMenuItem(i, 0);
+			    UpdateScreen();
+			}
 			break;
-		case SDL_MOUSEBUTTONUP:
+		/*case SDL_MOUSEBUTTONUP:
 			if ((event.button.button==SDL_BUTTON_LEFT) && InRect(event.button.x, event.button.y,buttonDistanceX,buttonDistanceY,buttonDistanceX+buttonWidth,buttonDistanceY+buttonHeight*buttonNum))
 			{	// menuitem
 				j=(event.button.y-buttonDistanceY)/buttonHeight;
 				value=j+1;
 			}
-			break;
+			break;*/
 		}
-		SDL_Delay(CPUWAIT);
+		SDL_Delay(CPUWAIT); //GE: FIXME: This is not the same between platforms and causes major lag in Linux.
 	}
 	return value;
 }
@@ -625,7 +635,7 @@ void DrawGUIElements()
     SizeF Pivot = {(BoundingBox.X-NewSize.X)/2.f, (BoundingBox.Y-NewSize.Y)/2.f};
     SizeF DestinationCoords = {Pivot.X+0.f, Pivot.Y+(BoundingBox.Y/2.f)};
     DrawTexture(GfxData[GAMEBG], TextureCoordinates[GAMEBG], SourceCoords, DestinationCoords, DrawScale);
-    UpdateScreen();
+    
     
     //GE: Draw the card area backgrounds.
     SizeF DestCoords = {0.0, 0.0};
@@ -657,23 +667,6 @@ void DrawGUIElements()
     RectColA.r=16; RectColA.g=66; RectColA.b=41;
     RectColB.r=0; RectColB.g=16; RectColB.b=8;
     DrawGradient(DestCoords, DestWH, RectColA, RectColB);
-    
-    //GE: Draw menu buttons.
-    DrawScale=FMin((float)ResX/1600.0, (float)ResY/1200.0);
-    
-    for (i=0; i<3; i++) //GE: I <3 top buttons.
-    {
-	SourceCoords.x=0; SourceCoords.y=108*i; SourceCoords.w=250; SourceCoords.h=108;
-	DestinationCoords.X = ((2.0*i+1.0)/6.0)-(((float)(SourceCoords.w*DrawScale)/ResX)/2.0); DestinationCoords.Y = ((130.0/600.0)-((float)(SourceCoords.h*DrawScale)/600.0))/2.0;
-	DrawTexture(GfxData[SPRITES], TextureCoordinates[SPRITES], SourceCoords, DestinationCoords, DrawScale);
-    }
-    
-    for (i=0; i<3; i++) //GE: I <3 bottom buttons.
-    {
-	SourceCoords.x=250*2; SourceCoords.y=108*i; SourceCoords.w=250; SourceCoords.h=108;
-	DestinationCoords.X = ((2.0*i+1.0)/6.0)-(((float)(SourceCoords.w*DrawScale)/ResX)/2.0); DestinationCoords.Y = ((600.0-130.0/2.0)-(float)(SourceCoords.h*DrawScale)/2.0)/600.0;
-	DrawTexture(GfxData[SPRITES], TextureCoordinates[SPRITES], SourceCoords, DestinationCoords, DrawScale);
-    }
     
     UpdateScreen();
 }

@@ -23,6 +23,15 @@ enum {
 		GFX_CNT
 };
 
+enum {
+	Start=0,
+	Hotseat,
+	Multiplayer,
+	Score,
+	Credits,
+	Quit
+};
+
 typedef struct PictureInfo{
     char* File;
     SDL_Surface* Surface;
@@ -46,6 +55,7 @@ void UpdateScreen();
 void RedrawScreen();
 void UpdateScreenRect(int x1,int y1,int x2,int y2);
 void FillRect(int x,int y,int w,int h,Uint8 r,Uint8 g,Uint8 b);
+void DrawMenuItem(int Type, char Lit);
 int Menu();
 void DrawCard(int c,int x,int y, Uint8 a);
 void DrawCardAlpha(int c,int x,int y,Uint8 a);

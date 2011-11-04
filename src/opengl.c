@@ -25,7 +25,7 @@ void InitOpenGL()
     glMatrixMode( GL_PROJECTION ); //Set the output to be a projection (2D plane).
     glLoadIdentity();
      
-    glOrtho(0.0f, 1.0f, 1.0f, 0.0f, -1.0f, 1.0f); //Set the coordinates to not be wacky - 1 unit is a pixel
+    glOrtho(0.0f, 1.0f, 1.0f, 0.0f, -1.0f, 1.0f); //Set the coordinates to be wacky - 1 unit is your resolution
      
     glMatrixMode( GL_MODELVIEW ); //Set to show models.
 }
