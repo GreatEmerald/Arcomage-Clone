@@ -564,11 +564,13 @@ void DrawMenuItem(int Type, char Lit)
     {
 	SourceCoords.x=0+250*Lit; SourceCoords.y=108*Type; SourceCoords.w=250; SourceCoords.h=108;
 	DestinationCoords.X = ((2.0*Type+1.0)/6.0)-(((float)(SourceCoords.w*DrawScale)/ResX)/2.0); DestinationCoords.Y = ((130.0/600.0)-((float)(SourceCoords.h*DrawScale)/600.0))/2.0;
+	printf("Debug: DrawMenuItem: DestinationCoords.Y is %f\n", DestinationCoords.Y);
     }
     else
     {
 	SourceCoords.x=250*2+250*Lit; SourceCoords.y=108*Type; SourceCoords.w=250; SourceCoords.h=108;
-	DestinationCoords.X = ((2.0*Type+1.0)/6.0)-(((float)(SourceCoords.w*DrawScale)/ResX)/2.0); DestinationCoords.Y = ((600.0-130.0/2.0)-(float)(SourceCoords.h*DrawScale)/2.0)/600.0;
+	DestinationCoords.X = ((2.0*(Type-3)+1.0)/6.0)-(((float)(SourceCoords.w*DrawScale)/ResX)/2.0); DestinationCoords.Y = ((600.0-130.0/2.0)-(float)(SourceCoords.h*DrawScale)/2.0)/600.0;
+	printf("Debug: DrawMenuItem: LOWER BUTTONS: DestinationCoords.Y is %f\n", DestinationCoords.Y);
     }
     DrawTexture(GfxData[SPRITES], TextureCoordinates[SPRITES], SourceCoords, DestinationCoords, DrawScale);
 }
@@ -579,6 +581,7 @@ int Menu()
 	float ResX = (float)GetConfig(ResolutionX);
 	float ResY = (float)GetConfig(ResolutionY);
 	float DrawScale = FMin((float)ResX/1600.0, (float)ResY/1200.0);
+	int LitButton = -1; //GE: Which button is lit.
 
 	for (i=0;i<6;i++)
 		DrawMenuItem(i,0);
@@ -596,16 +599,34 @@ int Menu()
 			value=Quit;
 			break;
 		case SDL_MOUSEMOTION:
-			for (i=0; i<3; i++)
+			for (i=0; i<6; i++)
 			{
-			    if ((float)event.motion.x/ResX >= (2.0*i+1.0)/6.0-(250.0*DrawScale/ResX/2.0) //GE: These correspond to entries in DrawMenuItem().
-				&& (float)event.motion.x/ResX <= (2.0*i+1.0)/6.0+(250.0*DrawScale/ResX/2.0) //GE: FIXME: Needs to draw things only if necessary, not all the time.
+			    if ( (i < 3
+				&& (float)event.motion.x/ResX >= (2.0*i+1.0)/6.0-(250.0*DrawScale/ResX/2.0) //GE: These correspond to entries in DrawMenuItem().
+				&& (float)event.motion.x/ResX <= (2.0*i+1.0)/6.0+(250.0*DrawScale/ResX/2.0)
 				&& (float)event.motion.y/ResX >= ((130.0/600.0)-(108.0*DrawScale/600.0))/2.0
 				&& (float)event.motion.y/ResX <= ((130.0/600.0)+(108.0*DrawScale/600.0))/2.0)
-				DrawMenuItem(i, 1);
-			    else
+				|| (i >= 3
+				&& (float)event.motion.x/ResX >= (2.0*(i-3.0)+1.0)/6.0-(250.0*DrawScale/ResX/2.0)
+				&& (float)event.motion.x/ResX <= (2.0*(i-3.0)+1.0)/6.0+(250.0*DrawScale/ResX/2.0)
+				&& (float)event.motion.y/ResX >= ((600.0-130.0/2.0)-(108.0*DrawScale/2.0))/600.0
+				&& (float)event.motion.y/ResX <= ((600.0-130.0/2.0)+(108.0*DrawScale/2.0))/600.0)
+				)
+			    {
+				if (LitButton < 0) //GE: We are on a button, and there are no lit buttons. Light the current one.
+				{
+				    printf("Debug: Menu: We are checking the rect starting with X %f and ending with X %f\n", (2.0*(i-3.0)+1.0)/6.0-(250.0*DrawScale/ResX/2.0), (2.0*(i-3.0)+1.0)/6.0+(250.0*DrawScale/ResX/2.0));
+				    DrawMenuItem(i, 1);
+				    UpdateScreen();
+				    LitButton = i;
+				}
+			    }
+			    else if (LitButton == i) //GE: We are not on the current button, yet it is lit.
+			    {
 				DrawMenuItem(i, 0);
-			    UpdateScreen();
+				UpdateScreen();
+				LitButton = -1;
+			    }
 			}
 			break;
 		/*case SDL_MOUSEBUTTONUP:
@@ -616,7 +637,7 @@ int Menu()
 			}
 			break;*/
 		}
-		SDL_Delay(CPUWAIT); //GE: FIXME: This is not the same between platforms and causes major lag in Linux.
+		SDL_Delay(0);//CPUWAIT); //GE: FIXME: This is not the same between platforms and causes major lag in Linux.
 	}
 	return value;
 }
