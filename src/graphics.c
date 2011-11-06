@@ -595,47 +595,52 @@ int Menu()
 		SDL_PollEvent(&event);
 		switch (event.type)
 		{
-		case SDL_QUIT:
-			value=Quit;
-			break;
-		case SDL_MOUSEMOTION:
-			for (i=0; i<6; i++)
-			{
-			    if ( (i < 3
-				&& (float)event.motion.x/ResX >= (2.0*i+1.0)/6.0-(250.0*DrawScale/ResX/2.0) //GE: These correspond to entries in DrawMenuItem().
-				&& (float)event.motion.x/ResX <= (2.0*i+1.0)/6.0+(250.0*DrawScale/ResX/2.0)
-				&& (float)event.motion.y/ResX >= ((130.0/600.0)-(108.0*DrawScale/600.0))/2.0
-				&& (float)event.motion.y/ResX <= ((130.0/600.0)+(108.0*DrawScale/600.0))/2.0)
-				|| (i >= 3
-				&& (float)event.motion.x/ResX >= (2.0*(i-3.0)+1.0)/6.0-(250.0*DrawScale/ResX/2.0)
-				&& (float)event.motion.x/ResX <= (2.0*(i-3.0)+1.0)/6.0+(250.0*DrawScale/ResX/2.0)
-				&& (float)event.motion.y/ResX >= ((600.0-130.0/2.0)-(108.0*DrawScale/2.0))/600.0
-				&& (float)event.motion.y/ResX <= ((600.0-130.0/2.0)+(108.0*DrawScale/2.0))/600.0)
-				)
-			    {
-				if (LitButton < 0) //GE: We are on a button, and there are no lit buttons. Light the current one.
-				{
-				    printf("Debug: Menu: We are checking the rect starting with X %f and ending with X %f\n", (2.0*(i-3.0)+1.0)/6.0-(250.0*DrawScale/ResX/2.0), (2.0*(i-3.0)+1.0)/6.0+(250.0*DrawScale/ResX/2.0));
-				    DrawMenuItem(i, 1);
-				    UpdateScreen();
-				    LitButton = i;
-				}
-			    }
-			    else if (LitButton == i) //GE: We are not on the current button, yet it is lit.
-			    {
-				DrawMenuItem(i, 0);
-				UpdateScreen();
-				LitButton = -1;
-			    }
-			}
-			break;
-		/*case SDL_MOUSEBUTTONUP:
-			if ((event.button.button==SDL_BUTTON_LEFT) && InRect(event.button.x, event.button.y,buttonDistanceX,buttonDistanceY,buttonDistanceX+buttonWidth,buttonDistanceY+buttonHeight*buttonNum))
-			{	// menuitem
-				j=(event.button.y-buttonDistanceY)/buttonHeight;
-				value=j+1;
-			}
-			break;*/
+            case SDL_QUIT:
+                value=Quit;
+                break;
+            case SDL_MOUSEMOTION:
+                for (i=0; i<6; i++)
+                {
+                    if ( (i < 3
+                    && FInRect(event.motion.x/ResX, event.motion.y/ResY,
+                    (2.0*i+1.0)/6.0-(250.0*DrawScale/ResX/2.0),
+                    (2.0*i+1.0)/6.0+(250.0*DrawScale/ResX/2.0),
+                    ((130.0/600.0)-(108.0*DrawScale/600.0))/2.0,
+                    ((130.0/600.0)+(108.0*DrawScale/600.0))/2.0))
+                    /*&& (float)event.motion.x/ResX >= (2.0*i+1.0)/6.0-(250.0*DrawScale/ResX/2.0) //GE: These correspond to entries in DrawMenuItem().
+                    && (float)event.motion.x/ResX <= (2.0*i+1.0)/6.0+(250.0*DrawScale/ResX/2.0)
+                    && (float)event.motion.y/ResY >= ((130.0/600.0)-(108.0*DrawScale/600.0))/2.0
+                    && (float)event.motion.y/ResY <= ((130.0/600.0)+(108.0*DrawScale/600.0))/2.0)*/
+                    || (i >= 3
+                    && (float)event.motion.x/ResX >= (2.0*(i-3.0)+1.0)/6.0-(250.0*DrawScale/ResX/2.0)
+                    && (float)event.motion.x/ResX <= (2.0*(i-3.0)+1.0)/6.0+(250.0*DrawScale/ResX/2.0)
+                    && (float)event.motion.y/ResY >= ((600.0-130.0/2.0)-(108.0*DrawScale/2.0))/600.0
+                    && (float)event.motion.y/ResY <= ((600.0-130.0/2.0)+(108.0*DrawScale/2.0))/600.0)
+                    )
+                    {
+                    if (LitButton < 0) //GE: We are on a button, and there are no lit buttons. Light the current one.
+                    {
+                        printf("Debug: Menu: We are checking the rect starting with X %f and ending with X %f\n", (2.0*(i-3.0)+1.0)/6.0-(250.0*DrawScale/ResX/2.0), (2.0*(i-3.0)+1.0)/6.0+(250.0*DrawScale/ResX/2.0));
+                        DrawMenuItem(i, 1);
+                        UpdateScreen();
+                        LitButton = i;
+                    }
+                    }
+                    else if (LitButton == i) //GE: We are not on the current button, yet it is lit.
+                    {
+                    DrawMenuItem(i, 0);
+                    UpdateScreen();
+                    LitButton = -1;
+                    }
+                }
+                break;
+            case SDL_MOUSEBUTTONUP:
+                //if ((event.button.button==SDL_BUTTON_LEFT) && InRect(event.button.x, event.button.y,buttonDistanceX,buttonDistanceY,buttonDistanceX+buttonWidth,buttonDistanceY+buttonHeight*buttonNum))
+                //{	// menuitem
+                    //j=(event.button.y-buttonDistanceY)/buttonHeight;
+                    //value=j+1;
+                //}
+                break;
 		}
 		SDL_Delay(0);//CPUWAIT); //GE: FIXME: This is not the same between platforms and causes major lag in Linux.
 	}
@@ -829,6 +834,11 @@ char *DialogBox(int type,const char *fmt,...)
 }
 
 int InRect(int x, int y, int x1, int y1, int x2, int y2)
+{
+	return (x>=x1)&&(x<=x2)&&(y>=y1)&&(y<=y2);
+}
+
+float FInRect(float x, float y, float x1, float y1, float x2, float y2)
 {
 	return (x>=x1)&&(x<=x2)&&(y>=y1)&&(y<=y2);
 }

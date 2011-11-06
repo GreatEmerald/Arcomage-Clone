@@ -48,7 +48,7 @@ void Quit()
  */
 int main(int argc,char *argv[])
 {
-    //int m;
+    int MenuAction;
     ////srand((unsigned)time(NULL));
 
     rt_init(); //Init D
@@ -59,14 +59,13 @@ int main(int argc,char *argv[])
     initGame(); //Init a 1vs1 game, will choose player types later
     DrawGUIElements();
 
-    //while ((m=Menu())!=4)//5)
+    MenuAction = Menu();//while ((m=Menu())!=4)//5)
     //{
-    //    switch (m)
-    //    {
+    switch (MenuAction)//    switch (m)
+    {//    {
     //    case 1:
-            SetPlayerInfo(Turn, "Player", 0);
-            SetPlayerInfo(GetEnemy(), "AI", 1);//Player[GetEnemy()].AI = 1;
-            Menu();
+            //SetPlayerInfo(Turn, "Player", 0);
+            //SetPlayerInfo(GetEnemy(), "AI", 1);//Player[GetEnemy()].AI = 1;
             //getchar();
             //Player[Turn].Name = "Player";
             //Player[GetEnemy()].Name = "A.I.";
@@ -89,7 +88,8 @@ int main(int argc,char *argv[])
             //DoCredits();
     //        break;
     //    }
-    //}
+    default: break;
+    }//}
 
     Quit();
 
