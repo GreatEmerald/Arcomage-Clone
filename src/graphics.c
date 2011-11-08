@@ -603,43 +603,57 @@ int Menu()
                 {
                     if ( (i < 3
                     && FInRect(event.motion.x/ResX, event.motion.y/ResY,
-                    (2.0*i+1.0)/6.0-(250.0*DrawScale/ResX/2.0),
-                    (2.0*i+1.0)/6.0+(250.0*DrawScale/ResX/2.0),
+                    (2.0*i+1.0)/6.0-(250.0*DrawScale/ResX/2.0), //GE: These correspond to entries in DrawMenuItem().
                     ((130.0/600.0)-(108.0*DrawScale/600.0))/2.0,
+		    (2.0*i+1.0)/6.0+(250.0*DrawScale/ResX/2.0),
                     ((130.0/600.0)+(108.0*DrawScale/600.0))/2.0))
-                    /*&& (float)event.motion.x/ResX >= (2.0*i+1.0)/6.0-(250.0*DrawScale/ResX/2.0) //GE: These correspond to entries in DrawMenuItem().
-                    && (float)event.motion.x/ResX <= (2.0*i+1.0)/6.0+(250.0*DrawScale/ResX/2.0)
-                    && (float)event.motion.y/ResY >= ((130.0/600.0)-(108.0*DrawScale/600.0))/2.0
-                    && (float)event.motion.y/ResY <= ((130.0/600.0)+(108.0*DrawScale/600.0))/2.0)*/
                     || (i >= 3
-                    && (float)event.motion.x/ResX >= (2.0*(i-3.0)+1.0)/6.0-(250.0*DrawScale/ResX/2.0)
-                    && (float)event.motion.x/ResX <= (2.0*(i-3.0)+1.0)/6.0+(250.0*DrawScale/ResX/2.0)
-                    && (float)event.motion.y/ResY >= ((600.0-130.0/2.0)-(108.0*DrawScale/2.0))/600.0
-                    && (float)event.motion.y/ResY <= ((600.0-130.0/2.0)+(108.0*DrawScale/2.0))/600.0)
+                    && FInRect(event.motion.x/ResX, event.motion.y/ResY,
+		    (2.0*(i-3.0)+1.0)/6.0-(250.0*DrawScale/ResX/2.0),
+		    ((600.0-130.0/2.0)-(108.0*DrawScale/2.0))/600.0,
+		    (2.0*(i-3.0)+1.0)/6.0+(250.0*DrawScale/ResX/2.0),
+		    ((600.0-130.0/2.0)+(108.0*DrawScale/2.0))/600.0))
                     )
                     {
-                    if (LitButton < 0) //GE: We are on a button, and there are no lit buttons. Light the current one.
-                    {
-                        printf("Debug: Menu: We are checking the rect starting with X %f and ending with X %f\n", (2.0*(i-3.0)+1.0)/6.0-(250.0*DrawScale/ResX/2.0), (2.0*(i-3.0)+1.0)/6.0+(250.0*DrawScale/ResX/2.0));
-                        DrawMenuItem(i, 1);
-                        UpdateScreen();
-                        LitButton = i;
-                    }
+			if (LitButton < 0) //GE: We are on a button, and there are no lit buttons. Light the current one.
+			{
+			    printf("Debug: Menu: We are checking the rect starting with X %f and ending with X %f\n", (2.0*(i-3.0)+1.0)/6.0-(250.0*DrawScale/ResX/2.0), (2.0*(i-3.0)+1.0)/6.0+(250.0*DrawScale/ResX/2.0));
+			    DrawMenuItem(i, 1);
+			    UpdateScreen();
+			    LitButton = i;
+			}
                     }
                     else if (LitButton == i) //GE: We are not on the current button, yet it is lit.
                     {
-                    DrawMenuItem(i, 0);
-                    UpdateScreen();
-                    LitButton = -1;
+			DrawMenuItem(i, 0);
+			UpdateScreen();
+			LitButton = -1;
                     }
                 }
                 break;
             case SDL_MOUSEBUTTONUP:
-                //if ((event.button.button==SDL_BUTTON_LEFT) && InRect(event.button.x, event.button.y,buttonDistanceX,buttonDistanceY,buttonDistanceX+buttonWidth,buttonDistanceY+buttonHeight*buttonNum))
-                //{	// menuitem
-                    //j=(event.button.y-buttonDistanceY)/buttonHeight;
-                    //value=j+1;
-                //}
+                if (event.button.button==SDL_BUTTON_LEFT)
+		{
+		    for (i=0; i<6; i++)
+		    {
+			if ( (i < 3
+			&& FInRect(event.motion.x/ResX, event.motion.y/ResY,
+			(2.0*i+1.0)/6.0-(250.0*DrawScale/ResX/2.0), //GE: These correspond to entries in DrawMenuItem().
+			((130.0/600.0)-(108.0*DrawScale/600.0))/2.0,
+			(2.0*i+1.0)/6.0+(250.0*DrawScale/ResX/2.0),
+			((130.0/600.0)+(108.0*DrawScale/600.0))/2.0))
+			|| (i >= 3
+			&& FInRect(event.motion.x/ResX, event.motion.y/ResY,
+			(2.0*(i-3.0)+1.0)/6.0-(250.0*DrawScale/ResX/2.0),
+			((600.0-130.0/2.0)-(108.0*DrawScale/2.0))/600.0,
+			(2.0*(i-3.0)+1.0)/6.0+(250.0*DrawScale/ResX/2.0),
+			((600.0-130.0/2.0)+(108.0*DrawScale/2.0))/600.0))
+			)
+			{
+			    value = i;
+			}
+		    }
+		}
                 break;
 		}
 		SDL_Delay(0);//CPUWAIT); //GE: FIXME: This is not the same between platforms and causes major lag in Linux.
@@ -872,8 +886,8 @@ void DoCredits()
 {
 	#define HGHT 30
 	char *text[]={
-		"Arcomage vAlpha" /*ARCOVER,*/
-		"by STiCK and GreatEmerald (2005-2009)",
+		"Arcomage 1.alpha.XX.XX" /*ARCOVER,*/
+		"by STiCK and GreatEmerald (2005-2011)",
 		"",
 		"This program was originally created",
 		"as Individual Software Project",
