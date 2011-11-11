@@ -1,6 +1,6 @@
 /**
  * File that contains the OpenGL-specific code and wraps around it. This is
- * specific for this projects.
+ * specific for this project.
  * 
  * Authors: GreatEmerald, 2011
  */  
@@ -113,17 +113,17 @@ void DrawTexture(GLuint Texture, Size TexSize, SDL_Rect SourceCoords, SizeF Dest
         //Top-right vertex (corner)
         glTexCoord2f( ((float)SourceCoords.x+(float)SourceCoords.w)/(float)TexSize.X, (float)SourceCoords.y/(float)TexSize.Y );
         glVertex2f( (float)DestinationCoords.X+DestinationW/(float)ResX, (float)DestinationCoords.Y);
-        printf("Info: DrawTexture: Drawing glTexCoord2f(%f, %f); glVertex2f(%f, %f)\n", (float)SourceCoords.x+(float)SourceCoords.w/(float)TexSize.X, (float)SourceCoords.y/(float)TexSize.Y, (float)DestinationCoords.X+DestinationW/(float)ResX, (float)DestinationCoords.Y);
+        printf("Info: DrawTexture: Drawing glTexCoord2f(%f, %f); glVertex2f(%f, %f)\n", ((float)SourceCoords.x+(float)SourceCoords.w)/(float)TexSize.X, (float)SourceCoords.y/(float)TexSize.Y, (float)DestinationCoords.X+DestinationW/(float)ResX, (float)DestinationCoords.Y);
      
         //Bottom-right vertex (corner)
         glTexCoord2f( ((float)SourceCoords.x+(float)SourceCoords.w)/(float)TexSize.X, ((float)SourceCoords.y+(float)SourceCoords.h)/(float)TexSize.Y );
         glVertex2f( (float)DestinationCoords.X+DestinationW/(float)ResX, (float)DestinationCoords.Y+DestinationH/(float)ResY);
-        printf("Info: DrawTexture: Drawing glTexCoord2f(%f, %f); glVertex2f(%f, %f)\n", (float)SourceCoords.x+(float)SourceCoords.w/(float)TexSize.X, (float)SourceCoords.y+(float)SourceCoords.h/(float)TexSize.Y, (float)DestinationCoords.X+DestinationW/(float)ResX, (float)DestinationCoords.Y+DestinationH/(float)ResY);
+        printf("Info: DrawTexture: Drawing glTexCoord2f(%f, %f); glVertex2f(%f, %f)\n", ((float)SourceCoords.x+(float)SourceCoords.w)/(float)TexSize.X, ((float)SourceCoords.y+(float)SourceCoords.h)/(float)TexSize.Y, (float)DestinationCoords.X+DestinationW/(float)ResX, (float)DestinationCoords.Y+DestinationH/(float)ResY);
      
         //Bottom-left vertex (corner)
         glTexCoord2f( (float)SourceCoords.x/(float)TexSize.X, ((float)SourceCoords.y+(float)SourceCoords.h)/(float)TexSize.Y );
         glVertex2f( (float)DestinationCoords.X, (float)DestinationCoords.Y+DestinationH/(float)ResY);
-        printf("Info: DrawTexture: Drawing glTexCoord2f(%f, %f); glVertex2f(%f, %f)\n", (float)SourceCoords.x/(float)TexSize.X, (float)SourceCoords.y+(float)SourceCoords.h/(float)TexSize.Y, (float)DestinationCoords.X, (float)DestinationCoords.Y+DestinationH/(float)ResY);
+        printf("Info: DrawTexture: Drawing glTexCoord2f(%f, %f); glVertex2f(%f, %f)\n", (float)SourceCoords.x/(float)TexSize.X, ((float)SourceCoords.y+(float)SourceCoords.h)/(float)TexSize.Y, (float)DestinationCoords.X, (float)DestinationCoords.Y+DestinationH/(float)ResY);
     glEnd();
 }
 

@@ -568,7 +568,7 @@ void DrawMenuItem(int Type, char Lit)
     }
     else
     {
-	SourceCoords.x=250*2+250*Lit; SourceCoords.y=108*Type; SourceCoords.w=250; SourceCoords.h=108;
+	SourceCoords.x=250*2+250*Lit; SourceCoords.y=108*(Type-3); SourceCoords.w=250; SourceCoords.h=108;
 	DestinationCoords.X = ((2.0*(Type-3)+1.0)/6.0)-(((float)(SourceCoords.w*DrawScale)/ResX)/2.0); DestinationCoords.Y = ((600.0-130.0/2.0)-(float)(SourceCoords.h*DrawScale)/2.0)/600.0;
 	printf("Debug: DrawMenuItem: LOWER BUTTONS: DestinationCoords.Y is %f\n", DestinationCoords.Y);
     }
