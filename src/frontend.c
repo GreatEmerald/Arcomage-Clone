@@ -59,6 +59,7 @@ int main(int argc,char *argv[])
     Graphics_Init();
     initGame(); //Init a 1vs1 game, will choose player types later
     DrawBackground();
+    DrawLogo();
     UpdateScreen();
 
     MenuAction = Menu();//while ((m=Menu())!=4)//5)
