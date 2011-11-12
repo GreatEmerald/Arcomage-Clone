@@ -176,6 +176,11 @@ void UpdateScreen()
 	//SDL_UpdateRect(GfxData[SCREEN],0,0,0,0);
 }
 
+void ClearScreen()
+{
+    glClear( GL_COLOR_BUFFER_BIT );
+}
+
 //GE: This function redraws the screen elements. Slow.
 /*void RedrawScreen(int turn, struct Stats* Player) //DEBUG
 {
@@ -327,29 +332,26 @@ void NewDrawCard(int C, int X, int Y, SDL_Surface* Sourface, Uint8 Alpha)//GE: S
       }
   }
 	SDL_BlitSurface(GfxData[DECK],&rectb,GfxData[SCREEN],&recta);
+}*/
+
+void DrawFoldedAlpha(int Team, float X, float Y, float Alpha)
+{
+    SDL_Rect DeckPosition;
+    SizeF ScreenPosition;
+    float DrawScale = FMin((float)GetConfig(ResolutionX)/1600.0, (float)GetConfig(ResolutionY)/1200.0);
+    
+    ScreenPosition.X = X; ScreenPosition.Y = Y;
+    
+    DeckPosition.x = 960+192*Team; DeckPosition.y = 324;
+    DeckPosition.w = 192; DeckPosition.h = 256;
+    
+    DrawTextureAlpha(GfxData[SPRITES], TextureCoordinates[SPRITES], DeckPosition, ScreenPosition, DrawScale, Alpha);
 }
 
-void DrawFolded(int Team, int X, int Y)
+void DrawFolded(int Team, float X, float Y)
 {
-    SDL_Rect ScreenPosition, DeckPosition;
-    
-    ScreenPosition.x = X; ScreenPosition.y = Y;
-    ScreenPosition.w = 96; ScreenPosition.h = 128;
-    
-    if (!bUseOriginalCards) //GE: New
-    {
-        DeckPosition.x = 0;
-        if (Team) //GE: Blue
-            DeckPosition.y = 128;
-        else //GE: Red
-            DeckPosition.y = 0;
-    }
-    else //GE: Original
-        DeckPosition.x = 192; DeckPosition.y = 0;
-    DeckPosition.w = ScreenPosition.w; DeckPosition.h = ScreenPosition.h;
-    
-    SDL_BlitSurface(GfxData[DECK],&DeckPosition,GfxData[SCREEN],&ScreenPosition);
-}*/
+    DrawFoldedAlpha(Team, X, Y, 0.0);
+}
 
 void DrawDiscard(int X, int Y)
 {
@@ -558,8 +560,6 @@ void DrawMenuItem(int Type, char Lit)
     float ResY = (float)GetConfig(ResolutionY);
     float DrawScale = FMin((float)ResX/1600.0, (float)ResY/1200.0);
     
-    printf("Info: DrawMenuItem: Lit is %d\n", (int)Lit);
-    
     if (Type < 3)
     {
 	SourceCoords.x=0+250*Lit; SourceCoords.y=108*Type; SourceCoords.w=250; SourceCoords.h=108;
@@ -577,7 +577,7 @@ void DrawMenuItem(int Type, char Lit)
 
 int Menu()
 {
-	int i,/*j,*/value=0;
+	int i,/*j,*/value=-1;
 	float ResX = (float)GetConfig(ResolutionX);
 	float ResY = (float)GetConfig(ResolutionY);
 	float DrawScale = FMin((float)ResX/1600.0, (float)ResY/1200.0);
@@ -590,50 +590,15 @@ int Menu()
 	
 	//Sound_Play(TITLE);
 
-	while (!value)
+	while (value == -1)
 	{
-		SDL_PollEvent(&event);
-		switch (event.type)
-		{
-            case SDL_QUIT:
-                value=Quit;
-                break;
-            case SDL_MOUSEMOTION:
-                for (i=0; i<6; i++)
-                {
-                    if ( (i < 3
-                    && FInRect(event.motion.x/ResX, event.motion.y/ResY,
-                    (2.0*i+1.0)/6.0-(250.0*DrawScale/ResX/2.0), //GE: These correspond to entries in DrawMenuItem().
-                    ((130.0/600.0)-(108.0*DrawScale/600.0))/2.0,
-		    (2.0*i+1.0)/6.0+(250.0*DrawScale/ResX/2.0),
-                    ((130.0/600.0)+(108.0*DrawScale/600.0))/2.0))
-                    || (i >= 3
-                    && FInRect(event.motion.x/ResX, event.motion.y/ResY,
-		    (2.0*(i-3.0)+1.0)/6.0-(250.0*DrawScale/ResX/2.0),
-		    ((600.0-130.0/2.0)-(108.0*DrawScale/2.0))/600.0,
-		    (2.0*(i-3.0)+1.0)/6.0+(250.0*DrawScale/ResX/2.0),
-		    ((600.0-130.0/2.0)+(108.0*DrawScale/2.0))/600.0))
-                    )
-                    {
-			if (LitButton < 0) //GE: We are on a button, and there are no lit buttons. Light the current one.
-			{
-			    printf("Debug: Menu: We are checking the rect starting with X %f and ending with X %f\n", (2.0*(i-3.0)+1.0)/6.0-(250.0*DrawScale/ResX/2.0), (2.0*(i-3.0)+1.0)/6.0+(250.0*DrawScale/ResX/2.0));
-			    DrawMenuItem(i, 1);
-			    UpdateScreen();
-			    LitButton = i;
-			}
-                    }
-                    else if (LitButton == i) //GE: We are not on the current button, yet it is lit.
-                    {
-			DrawMenuItem(i, 0);
-			UpdateScreen();
-			LitButton = -1;
-                    }
-                }
-                break;
-            case SDL_MOUSEBUTTONUP:
-                if (event.button.button==SDL_BUTTON_LEFT)
-		{
+	    SDL_PollEvent(&event);
+	    switch (event.type)
+	    {
+		case SDL_QUIT:
+		    value=QUIT;
+		    break;
+		case SDL_MOUSEMOTION:
 		    for (i=0; i<6; i++)
 		    {
 			if ( (i < 3
@@ -650,18 +615,53 @@ int Menu()
 			((600.0-130.0/2.0)+(108.0*DrawScale/2.0))/600.0))
 			)
 			{
-			    value = i;
+			    if (LitButton < 0) //GE: We are on a button, and there are no lit buttons. Light the current one.
+			    {
+				DrawMenuItem(i, 1);
+				UpdateScreen();
+				LitButton = i;
+			    }
+			}
+			else if (LitButton == i) //GE: We are not on the current button, yet it is lit.
+			{
+			    DrawMenuItem(i, 0);
+			    UpdateScreen();
+			    LitButton = -1;
 			}
 		    }
-		}
-                break;
-		}
-		SDL_Delay(0);//CPUWAIT); //GE: FIXME: This is not the same between platforms and causes major lag in Linux.
+		    break;
+		case SDL_MOUSEBUTTONUP:
+		    if (event.button.button==SDL_BUTTON_LEFT)
+		    {
+			for (i=0; i<6; i++)
+			{
+			    if ( (i < 3
+			    && FInRect(event.motion.x/ResX, event.motion.y/ResY,
+			    (2.0*i+1.0)/6.0-(250.0*DrawScale/ResX/2.0), //GE: These correspond to entries in DrawMenuItem().
+			    ((130.0/600.0)-(108.0*DrawScale/600.0))/2.0,
+			    (2.0*i+1.0)/6.0+(250.0*DrawScale/ResX/2.0),
+			    ((130.0/600.0)+(108.0*DrawScale/600.0))/2.0))
+			    || (i >= 3
+			    && FInRect(event.motion.x/ResX, event.motion.y/ResY,
+			    (2.0*(i-3.0)+1.0)/6.0-(250.0*DrawScale/ResX/2.0),
+			    ((600.0-130.0/2.0)-(108.0*DrawScale/2.0))/600.0,
+			    (2.0*(i-3.0)+1.0)/6.0+(250.0*DrawScale/ResX/2.0),
+			    ((600.0-130.0/2.0)+(108.0*DrawScale/2.0))/600.0))
+			    )
+			    {
+				printf("Debug: Menu: MouseUp with %d\n", i);
+				value = i;
+			    }
+			}
+		    }
+		    break;
+	    }
+	    SDL_Delay(0);//CPUWAIT); //GE: FIXME: This is not the same between platforms and causes major lag in Linux.
 	}
 	return value;
 }
 
-void DrawGUIElements()
+void DrawBackground()
 {
     int i;
     float ResX = (float)GetConfig(ResolutionX);
@@ -707,8 +707,11 @@ void DrawGUIElements()
     RectColA.r=16; RectColA.g=66; RectColA.b=41;
     RectColB.r=0; RectColB.g=16; RectColB.b=8;
     DrawGradient(DestCoords, DestWH, RectColA, RectColB);
-    
-    UpdateScreen();
+}
+
+void DrawUI()
+{
+    //GE: Draw status boxes 8x205
 }
 
 ////////////////////////////////////////////////////////////////////////////////

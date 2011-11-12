@@ -1,14 +1,14 @@
 #ifndef _GRAPHICS_H_
 #define _GRAPHICS_ 1
 
-//#include "cards.h"
+#include <SDL.h>
 
 enum {
 		/*SCREEN=0,
 		BUFFER,*/
 		TITLE=0,
 		SPRITES,
-		CREDITS,
+		//CREDITS,
 		//DECK,
 		//NUMSBIG,
 		GAMEBG,
@@ -24,12 +24,12 @@ enum {
 };
 
 enum {
-	Start=0,
-	Hotseat,
-	Multiplayer,
-	Score,
-	Credits,
-	Quit
+	START=0,
+	HOTSEAT,
+	MULTIPLAYER,
+	SCORE,
+	CREDITS,
+	QUIT
 };
 
 typedef struct PictureInfo{
@@ -59,7 +59,8 @@ void DrawMenuItem(int Type, char Lit);
 int Menu();
 void DrawCard(int c,int x,int y, Uint8 a);
 void DrawCardAlpha(int c,int x,int y,Uint8 a);
-void DrawFolded(int Team, int X, int Y);
+void DrawFoldedAlpha(int Team, float X, float Y, float Alpha);
+void DrawFolded(int Team, float X, float Y);
 //void DrawStatus(int turn,struct Stats *Player);
 char *DialogBox(int type,const char *fmt,...);
 int InRect(int x, int y, int x1, int y1, int x2, int y2);

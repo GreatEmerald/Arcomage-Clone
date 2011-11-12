@@ -15,6 +15,8 @@
 void InitOpenGL()
 {
     glEnable( GL_TEXTURE_2D ); //Enable 2D texturing support
+    glEnable (GL_BLEND); //GE: Enable AlphaBlend
+    glBlendFunc (GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA); //GE: Set AlphaBlend to not be wacky
  
     glClearColor( 0.0f, 0.0f, 0.0f, 0.0f ); //Set the clear colour
      
@@ -25,7 +27,7 @@ void InitOpenGL()
     glMatrixMode( GL_PROJECTION ); //Set the output to be a projection (2D plane).
     glLoadIdentity();
      
-    glOrtho(0.0f, 1.0f, 1.0f, 0.0f, -1.0f, 1.0f); //Set the coordinates to be wacky - 1 unit is your resolution
+    glOrtho(0.0f, 1.0f, 1.0f, 0.0f, -1.0f, 1.0f); //GE: Set the coordinates to be wacky - 1 unit is your resolution
      
     glMatrixMode( GL_MODELVIEW ); //Set to show models.
 }
@@ -89,7 +91,7 @@ void FreeTextures(GLuint Texture)
  * \param DestinationCoords Two floats that define, in percentage, where the texture is to be positioned on the screen. The values indicate the top left pixel.
  * \param ScaleFactor A float that indicates (in percentage) the amount of scaling to use. For the original data scaled only by the chosen resolution, use 1.0.
  */ 
-void DrawTexture(GLuint Texture, Size TexSize, SDL_Rect SourceCoords, SizeF DestinationCoords, float ScaleFactor)
+void DrawTextureAlpha(GLuint Texture, Size TexSize, SDL_Rect SourceCoords, SizeF DestinationCoords, float ScaleFactor, float Alpha)
 {
     int ResX = GetConfig(ResolutionX);
     int ResY = GetConfig(ResolutionY);
@@ -103,7 +105,7 @@ void DrawTexture(GLuint Texture, Size TexSize, SDL_Rect SourceCoords, SizeF Dest
     // Bind the texture to which subsequent calls refer to
     glBindTexture( GL_TEXTURE_2D, Texture );
     
-    glColor3f(1.0,1.0,1.0);
+    glColor4f(1.0, 1.0, 1.0, Alpha);
     glBegin( GL_QUADS );
         //Top-left vertex (corner)
         glTexCoord2f( (float)SourceCoords.x/(float)TexSize.X, (float)SourceCoords.y/(float)TexSize.Y );
@@ -125,6 +127,14 @@ void DrawTexture(GLuint Texture, Size TexSize, SDL_Rect SourceCoords, SizeF Dest
         glVertex2f( (float)DestinationCoords.X, (float)DestinationCoords.Y+DestinationH/(float)ResY);
         printf("Info: DrawTexture: Drawing glTexCoord2f(%f, %f); glVertex2f(%f, %f)\n", (float)SourceCoords.x/(float)TexSize.X, ((float)SourceCoords.y+(float)SourceCoords.h)/(float)TexSize.Y, (float)DestinationCoords.X, (float)DestinationCoords.Y+DestinationH/(float)ResY);
     glEnd();
+}
+
+/**
+ * Simplified version of DrawTextureAlpha.
+ */ 
+void DrawTexture(GLuint Texture, Size TexSize, SDL_Rect SourceCoords, SizeF DestinationCoords, float ScaleFactor)
+{
+    DrawTextureAlpha(Texture, TexSize, SourceCoords, DestinationCoords, ScaleFactor, 1.0);
 }
 
 void DrawRectangle(SizeF DestinationCoords, SizeF DestinationWH, SDL_Colour Colour)

@@ -11,6 +11,7 @@
 #include <stdlib.h>
 #include <stdarg.h>
 #include "adapter.h"
+#include "graphics.h"
 
 /**
  * Utility function for printing out error messages.
@@ -57,16 +58,23 @@ int main(int argc,char *argv[])
     //    Sound_Init();
     Graphics_Init();
     initGame(); //Init a 1vs1 game, will choose player types later
-    DrawGUIElements();
+    DrawBackground();
+    UpdateScreen();
 
     MenuAction = Menu();//while ((m=Menu())!=4)//5)
+    printf("Debug: main: MenuAction is %d\n", MenuAction);
     //{
     switch (MenuAction)//    switch (m)
-    {//    {
-    //    case 1:
+    {
+        case START:
+            ClearScreen();
+            DrawBackground();
+            DrawFoldedAlpha(0, 120.0/800.0, 166.0/600.0, (float)GetConfig(CardTranslucency)/255.0);
+            DrawUI();
+            UpdateScreen();
             //SetPlayerInfo(Turn, "Player", 0);
             //SetPlayerInfo(GetEnemy(), "AI", 1);//Player[GetEnemy()].AI = 1;
-            //getchar();
+            getchar();
             //Player[Turn].Name = "Player";
             //Player[GetEnemy()].Name = "A.I.";
             //DoGame(); //Start the input loop
