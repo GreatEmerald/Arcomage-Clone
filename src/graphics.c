@@ -711,7 +711,41 @@ void DrawBackground()
 
 void DrawUI()
 {
-    //GE: Draw status boxes 8x205
+    //GE: Draw status boxes
+    SDL_Rect ItemPosition;
+    SizeF ScreenPosition;
+    float DrawScale = FMin((float)GetConfig(ResolutionX)/1600.0, (float)GetConfig(ResolutionY)/1200.0);
+    
+    ItemPosition.x = 1181; ItemPosition.y = 0;
+    ItemPosition.w = 78; ItemPosition.h = 216;
+    
+    ScreenPosition.X = 8.0/800.0; ScreenPosition.Y = 196.0/600.0;
+    
+    DrawTexture(GfxData[SPRITES], TextureCoordinates[SPRITES], ItemPosition, ScreenPosition, DrawScale*2.0);
+    
+    ScreenPosition.X = (800.0-8.0-78.0)/800.0; ScreenPosition.Y = 205.0/600.0;
+    DrawTexture(GfxData[SPRITES], TextureCoordinates[SPRITES], ItemPosition, ScreenPosition, DrawScale*2.0);
+    
+    //GE: Draw two towers
+    ItemPosition.x = 1000; ItemPosition.y = 0;
+    ItemPosition.w = 68; ItemPosition.h = 94+200*((float)GetConfig(TowerLevels)/(float)GetConfig(TowerVictory));
+    
+    ScreenPosition.X = 92.0/800.0; ScreenPosition.Y = (433.0-94.0*284.0/294.0-(float)GetConfig(TowerLevels)*284.0/294.0)/600.0; //GE: FIXME
+    DrawTexture(GfxData[SPRITES], TextureCoordinates[SPRITES], ItemPosition, ScreenPosition, DrawScale*2.0*284.0/294.0);
+}
+
+void DrawLogo()
+{
+    SDL_Rect ItemPosition;
+    SizeF ScreenPosition;
+    float DrawScale = FMin((float)GetConfig(ResolutionX)/1600.0, (float)GetConfig(ResolutionY)/1200.0);
+    
+    ScreenPosition.X = (800.0/2.0-TextureCoordinates[TITLE].X/2.0)/800.0; ScreenPosition.Y = (600.0/2.0-TextureCoordinates[TITLE].Y/2.0)/600.0;
+    
+    ItemPosition.x = 0; ItemPosition.y = 0;
+    ItemPosition.w = (int)TextureCoordinates[TITLE].X; ItemPosition.h = (int)TextureCoordinates[TITLE].Y;
+    
+    DrawTexture(GfxData[TITLE], TextureCoordinates[TITLE], ItemPosition, ScreenPosition, DrawScale*2.0);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
