@@ -730,8 +730,54 @@ void DrawUI()
     ItemPosition.x = 1000; ItemPosition.y = 0;
     ItemPosition.w = 68; ItemPosition.h = 94+200*((float)GetConfig(TowerLevels)/(float)GetConfig(TowerVictory));
     
-    ScreenPosition.X = 92.0/800.0; ScreenPosition.Y = (433.0-94.0*284.0/294.0-(float)GetConfig(TowerLevels)*284.0/294.0)/600.0; //GE: FIXME
+    ScreenPosition.X = 92.0/800.0; ScreenPosition.Y = (433.0-(float)ItemPosition.h)/600.0;
     DrawTexture(GfxData[SPRITES], TextureCoordinates[SPRITES], ItemPosition, ScreenPosition, DrawScale*2.0*284.0/294.0);
+    
+    ItemPosition.x = 1068;
+    ScreenPosition.X = (800.0-ItemPosition.w-92.0)/800.0;
+    DrawTexture(GfxData[SPRITES], TextureCoordinates[SPRITES], ItemPosition, ScreenPosition, DrawScale*2.0*284.0/294.0);
+    
+    //GE: Draw two walls
+    ItemPosition.x = 1136; ItemPosition.y = 0;
+    ItemPosition.w = 45; ItemPosition.h = 38+200*((float)GetConfig(WallLevels)/(float)GetConfig(MaxWall));
+    
+    ScreenPosition.X = 162.0/800.0; ScreenPosition.Y = (433.0-(float)ItemPosition.h)/600.0;
+    DrawTexture(GfxData[SPRITES], TextureCoordinates[SPRITES], ItemPosition, ScreenPosition, DrawScale*2.0*284.0/294.0);
+    
+    ScreenPosition.X = (800.0-ItemPosition.w-162.0)/800.0;
+    DrawTexture(GfxData[SPRITES], TextureCoordinates[SPRITES], ItemPosition, ScreenPosition, DrawScale*2.0*284.0/294.0);
+    
+    //GE: Draw the tower/wall boxes
+    //GE: Tower
+    ItemPosition.x = 1246; ItemPosition.y = 276;
+    ItemPosition.w = 98; ItemPosition.h = 48;
+    
+    ScreenPosition.X = 100.0/800.0; ScreenPosition.Y = 434.0/600.0;
+    DrawTexture(GfxData[SPRITES], TextureCoordinates[SPRITES], ItemPosition, ScreenPosition, DrawScale);
+    
+    ScreenPosition.X = (800.0-(ItemPosition.w*DrawScale)-100.0)/800.0;
+    DrawTexture(GfxData[SPRITES], TextureCoordinates[SPRITES], ItemPosition, ScreenPosition, DrawScale);
+    
+    //GE: Wall
+    ItemPosition.x = 1162; ItemPosition.y = 276;
+    ItemPosition.w = 84; ItemPosition.h = 48;
+    
+    ScreenPosition.X = 163.0/800.0; ScreenPosition.Y = 434.0/600.0;
+    DrawTexture(GfxData[SPRITES], TextureCoordinates[SPRITES], ItemPosition, ScreenPosition, DrawScale);
+    
+    ScreenPosition.X = (800.0-(ItemPosition.w*DrawScale)-163.0)/800.0;
+    DrawTexture(GfxData[SPRITES], TextureCoordinates[SPRITES], ItemPosition, ScreenPosition, DrawScale);
+    
+    //GE: Names
+    ItemPosition.x = 1188; ItemPosition.y = 228;
+    ItemPosition.w = 156; ItemPosition.h = 48;
+    
+    ScreenPosition.X = 8.0/800.0; ScreenPosition.Y = 162.0/600.0;
+    DrawTexture(GfxData[SPRITES], TextureCoordinates[SPRITES], ItemPosition, ScreenPosition, DrawScale);
+    
+    ScreenPosition.X = (800.0-(ItemPosition.w*DrawScale)-8.0)/800.0;
+    DrawTexture(GfxData[SPRITES], TextureCoordinates[SPRITES], ItemPosition, ScreenPosition, DrawScale);
+    
 }
 
 void DrawLogo()
