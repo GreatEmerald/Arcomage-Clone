@@ -246,18 +246,32 @@ void NewDrawCard(int C, int X, int Y, SDL_Surface* Sourface, Uint8 Alpha)//GE: S
     printf("Finished drawing the card.\n");*/
 }
 
-/*
- * GE: Lua reform: We want the modder in Lua to give the picture and coordinates
- * and parse those to load the required surfaces in C. Then when sending to D,
- * we want to send the things already parsed - instead of a string and four
- * doubles, we want a pointer and four ints/struct of coords. When we attempt
- * to draw a card, we pass the card number and pool, from where C code asks D
- * for the pointer and coords, which it then uses to display the thing.     
+/**
+ * Draws a card on the screen.
+ * 
+ * In order to do that, the function needs to know which card to draw
+ * and where. A card itself consists of the background, picture and
+ * text for the name, description and cost(s). This function uses the
+ * adapter to automatically get all the information it needs from D's
+ * database - it only needs the number of the card in hand and the
+ * player in question.
  */
-//GE: c - card ID, x,y - position on the screen.
-/*void DrawCard(int c,int x,int y, Uint8 a) //DEBUG
+void DrawCardAlpha(int8 Player, int8 Number, float X, float Y, float Alpha)
 {
-	SDL_Rect recta,rectb;
+    //GE: Draw the background.
+    //GE: First, get the background that we will be using.
+    int Colour = GetColourType(Player, Number);
+    
+    SDL_Rect ItemPosition;
+    SizeF ScreenPosition = {X, Y};
+    float DrawScale = FMin((float)GetConfig(ResolutionX)/1600.0, (float)GetConfig(ResolutionY)/1200.0);
+    
+    ItemPosition.x = Colour * 192;  ItemPosition.w = 192; //GE: Careful here. Colours must be in the same order as they are in the picture and the adapter must match.
+    ItemPosition.y = 324;           ItemPosition.h = 256;
+    
+    DrawTexture(GfxData[SPRITES], TextureCoordinates[SPRITES], ItemPosition, ScreenPosition, DrawScale);
+    
+	/*SDL_Rect recta,rectb;
 	int RawX, RawY;
 	
 	char* File;
@@ -291,48 +305,13 @@ void NewDrawCard(int C, int X, int Y, SDL_Surface* Sourface, Uint8 Alpha)//GE: S
 	{
 	   recta.x=x;recta.y=y;recta.w=96;recta.h=128;
      rectb.x=(c&0xFF)*96;rectb.y=(c>>8)*128;rectb.w=96;rectb.h=128;
-	}
-	else
-	{*/
-    	/*
-    	 * GE: Transform.
-    	 * Got 1*96, 1*128
-    	 * Got 11*96, 1*128 -> 1*96, 2*128
-    	 * Got 1*96, 2*128 -> 1*96, 5*128
-    	 * Three special cards: 0,0 is red, 0,1 is blue, 0,3 is Discard.
-    	 * Original doesn't have blue, and Discard is not in a shape of a card.             
-    	 */
-    	
-/*      RawX=(c&0xFF); //DEBUG
-    	RawY=(c>>8);
-    	
-    	//GE: Start special case handling --------------------------------------------
-    	if (RawX == 0)
-    	{
-          if (RawY == 0 || RawY == 1) //GE: back of the card
-          {
-              rectb.x=192;rectb.y=0;rectb.w=96;rectb.h=128;
-              recta.x=x;recta.y=y;
-          }
-          else //GE: Discard
-          {
-              rectb.x=843;rectb.y=200;rectb.w=73;rectb.h=16;
-              SDL_SetColorKey(GfxData[DECK], SDL_SRCCOLORKEY, 0x000000FF);
-              recta.x=x+11;recta.y=y+56;
-          }
-      }
-      else //GE: End special case handling -----------------------------------------
-      {
-        	RawX-=1;
-          RawY=RawX/10+(RawY*4);
-          RawX=RawX%10;
-        	
-        	recta.x=x;recta.y=y;recta.w=96;recta.h=128;
-          rectb.x=RawX*96;rectb.y=RawY*128+220;rectb.w=96;rectb.h=128;
-      }
-  }
-	SDL_BlitSurface(GfxData[DECK],&rectb,GfxData[SCREEN],&recta);
-}*/
+	}*/
+}
+
+inline void DrawCard(int8 Number, int X, int Y)
+{
+	DrawCardAlpha(Number, X, Y, 0.0);
+}
 
 void DrawFoldedAlpha(int Team, float X, float Y, float Alpha)
 {
@@ -348,7 +327,7 @@ void DrawFoldedAlpha(int Team, float X, float Y, float Alpha)
     DrawTextureAlpha(GfxData[SPRITES], TextureCoordinates[SPRITES], DeckPosition, ScreenPosition, DrawScale, Alpha);
 }
 
-void DrawFolded(int Team, float X, float Y)
+inline void DrawFolded(int Team, float X, float Y)
 {
     DrawFoldedAlpha(Team, X, Y, 0.0);
 }
@@ -562,15 +541,15 @@ void DrawMenuItem(int Type, char Lit)
     
     if (Type < 3)
     {
-	SourceCoords.x=0+250*Lit; SourceCoords.y=108*Type; SourceCoords.w=250; SourceCoords.h=108;
-	DestinationCoords.X = ((2.0*Type+1.0)/6.0)-(((float)(SourceCoords.w*DrawScale)/ResX)/2.0); DestinationCoords.Y = ((130.0/600.0)-((float)(SourceCoords.h*DrawScale)/600.0))/2.0;
-	printf("Debug: DrawMenuItem: DestinationCoords.Y is %f\n", DestinationCoords.Y);
+        SourceCoords.x=0+250*Lit; SourceCoords.y=108*Type; SourceCoords.w=250; SourceCoords.h=108;
+        DestinationCoords.X = ((2.0*Type+1.0)/6.0)-(((float)(SourceCoords.w*DrawScale)/ResX)/2.0); DestinationCoords.Y = ((130.0/600.0)-((float)(SourceCoords.h*DrawScale)/600.0))/2.0;
+        //printf("Debug: DrawMenuItem: DestinationCoords.Y is %f\n", DestinationCoords.Y);
     }
     else
     {
-	SourceCoords.x=250*2+250*Lit; SourceCoords.y=108*(Type-3); SourceCoords.w=250; SourceCoords.h=108;
-	DestinationCoords.X = ((2.0*(Type-3)+1.0)/6.0)-(((float)(SourceCoords.w*DrawScale)/ResX)/2.0); DestinationCoords.Y = ((600.0-130.0/2.0)-(float)(SourceCoords.h*DrawScale)/2.0)/600.0;
-	printf("Debug: DrawMenuItem: LOWER BUTTONS: DestinationCoords.Y is %f\n", DestinationCoords.Y);
+        SourceCoords.x=250*2+250*Lit; SourceCoords.y=108*(Type-3); SourceCoords.w=250; SourceCoords.h=108;
+        DestinationCoords.X = ((2.0*(Type-3)+1.0)/6.0)-(((float)(SourceCoords.w*DrawScale)/ResX)/2.0); DestinationCoords.Y = ((600.0-130.0/2.0)-(float)(SourceCoords.h*DrawScale)/2.0)/600.0;
+        //printf("Debug: DrawMenuItem: LOWER BUTTONS: DestinationCoords.Y is %f\n", DestinationCoords.Y);
     }
     DrawTexture(GfxData[SPRITES], TextureCoordinates[SPRITES], SourceCoords, DestinationCoords, DrawScale);
 }

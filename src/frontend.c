@@ -68,13 +68,14 @@ int main(int argc,char *argv[])
     switch (MenuAction)//    switch (m)
     {
         case START:
+            SetPlayerInfo(Turn, "Player", 0); //GE: Set up a player VS AI game.
+            SetPlayerInfo(GetEnemy(), "AI", 1);//Player[GetEnemy()].AI = 1;
+            
             ClearScreen();
             DrawBackground();
             DrawFoldedAlpha(0, 120.0/800.0, 166.0/600.0, (float)GetConfig(CardTranslucency)/255.0);
             DrawUI();
             UpdateScreen();
-            //SetPlayerInfo(Turn, "Player", 0);
-            //SetPlayerInfo(GetEnemy(), "AI", 1);//Player[GetEnemy()].AI = 1;
             getchar();
             //Player[Turn].Name = "Player";
             //Player[GetEnemy()].Name = "A.I.";
