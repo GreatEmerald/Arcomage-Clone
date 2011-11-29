@@ -308,9 +308,9 @@ void DrawCardAlpha(int8 Player, int8 Number, float X, float Y, float Alpha)
 	}*/
 }
 
-inline void DrawCard(int8 Number, int X, int Y)
+inline void DrawCard(int8 Player, int8 Number, float X, float Y)
 {
-	DrawCardAlpha(Number, X, Y, 0.0);
+	DrawCardAlpha(Player, Number, X, Y, 0.0);
 }
 
 void DrawFoldedAlpha(int Team, float X, float Y, float Alpha)

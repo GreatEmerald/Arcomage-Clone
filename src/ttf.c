@@ -15,10 +15,10 @@ void InitTTF()
 }
 
 /**
- * Render text in some fashion. I need to test this out.
- * Authors: C-Junkie
+ * Render a single line. Do not use for formatted text!
+ * Authors: C-Junkie, GreatEmerald
  */ 
-void SDL_GL_RenderText(char *text, TTF_Font *font, SDL_Color color, SDL_Rect *location)
+void RenderLine(char* text, TTF_Font* font, SDL_Color color, SDL_Rect location)
 {
 
 	SDL_Surface *initial;
@@ -34,37 +34,41 @@ void SDL_GL_RenderText(char *text, TTF_Font *font, SDL_Color color, SDL_Rect *lo
 	w = nextpoweroftwo(initial->w);
 	h = nextpoweroftwo(initial->h);
 
-	
-
 	intermediary = SDL_CreateRGBSurface(0, w, h, 32, 0x00ff0000, 0x0000ff00, 0x000000ff, 0xff000000);
-
-
 
 	SDL_BlitSurface(initial, 0, intermediary, 0);
 
-	
-
 	/* Tell GL about our new texture */
     texture = SurfaceToTexture(intermediary);
-
     DrawTexture(texture, Size TexSize, SDL_Rect SourceCoords, SizeF DestinationCoords, float ScaleFactor) //GE: TODO
 
-	/* return the deltas in the unused w,h part of the rect */
-
-	location->w = initial->w;
-
-	location->h = initial->h;
-
-	
-
 	/* Clean up */
-
 	SDL_FreeSurface(initial);
-
 	SDL_FreeSurface(intermediary);
-
 	glDeleteTextures(1, &texture);
+}
 
+/**
+ * Finds the best font size for the current resolution and deck. May be
+ * slow.
+ * 
+ * It works in this fashion: It requests a string array (the words in
+ * the description of a card) from D, then counts the length of the
+ * words in 90px (9*10). It then finds out how many lines said string
+ * would take up if it was bound to a rectangle. If it's more than is
+ * allowed, then it scales the size twice. If it fits, it scales up and
+ * repeats until the size is correct. Perhaps trial and error are not
+ * necessary and this can be done using a formula?
+ */
+int FindOptimalFontSize(SDL_Rect CardSize)
+{
+    int* NumSentences;
+    int** NumWords;
+    char*** Words = GetCardDescriptionWords(NumSentences, NumWords);
+    int Sentence;
+    
+    for (Sentence = 0; Sentence < NumSentences; Sentence++)
+        //Words[Sentence] means a sentence
 }
 
 /**

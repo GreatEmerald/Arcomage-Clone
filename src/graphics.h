@@ -57,8 +57,8 @@ void UpdateScreenRect(int x1,int y1,int x2,int y2);
 void FillRect(int x,int y,int w,int h,Uint8 r,Uint8 g,Uint8 b);
 void DrawMenuItem(int Type, char Lit);
 int Menu();
-void DrawCard(int c,int x,int y, Uint8 a);
-void DrawCardAlpha(int c,int x,int y,Uint8 a);
+void DrawCard(int8 Player, int8 Number, float X, float Y)
+void DrawCardAlpha(int8 Player, int8 Number, float X, float Y, float Alpha)
 void DrawFoldedAlpha(int Team, float X, float Y, float Alpha);
 void DrawFolded(int Team, float X, float Y);
 //void DrawStatus(int turn,struct Stats *Player);
