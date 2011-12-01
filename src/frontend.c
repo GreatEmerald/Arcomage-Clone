@@ -59,9 +59,6 @@ int main(int argc,char *argv[])
     //    Sound_Init();
     Graphics_Init();
     initGame(); //Init a 1vs1 game, will choose player types later
-    DrawBackground();
-    DrawLogo();
-    UpdateScreen();
 
     MenuAction = Menu();//while ((m=Menu())!=4)//5)
     printf("Debug: main: MenuAction is %d\n", MenuAction);

@@ -31,6 +31,7 @@ void RenderLine(char* text, TTF_Font* font, SDL_Color color, SDL_Rect location)
 	initial = TTF_RenderText_Blended(font, text, color); //GE: TODO - add support for shading
 
 	/* Convert the rendered text to a known format */
+    //GE: Probably not necessary when we have support for non-power of 2 textures.
 	w = nextpoweroftwo(initial->w);
 	h = nextpoweroftwo(initial->h);
 
@@ -62,13 +63,25 @@ void RenderLine(char* text, TTF_Font* font, SDL_Color color, SDL_Rect location)
  */
 int FindOptimalFontSize(SDL_Rect CardSize)
 {
-    int* NumSentences;
-    int** NumWords;
-    char*** Words = GetCardDescriptionWords(NumSentences, NumWords);
-    int Sentence;
+    int NumSentences;
+    int* NumWords;
+    char*** Words = GetCardDescriptionWords(&NumSentences, &NumWords);
+    int Sentence, Word;
+    int** WordLengthList;
+    TTF_Font* ProbeFont;
+    
+    TTF_OpenFont(GetFilePath("fonts/FreeSans.ttf"), 90); //GE: Probe with 9*10, because it gives us good enough resolution (we won't support over 8000x6000 anyway)
+    WordLengthList = (int**) malloc(sizeof(int*)*NumSentences); //GE: Set WordLengthList.length = NumSentences;
     
     for (Sentence = 0; Sentence < NumSentences; Sentence++)
+    {
+        WordLengthList[Sentence] = (int*) malloc(sizeof(int)*NumWords[Sentence]); //GE: Set WordLengthList[Sentence].length = NumWords[Sentence];
+        for (Word = 0; Word < NumWords[Sentence]; Word++)
+        {
+            TTF_SizeText(ProbeFont, Words[Sentence][Word], &WordLengthList[Sentence][Word], NULL); //GE: Populate the word length list.
+        }
         //Words[Sentence] means a sentence
+    }
 }
 
 /**

@@ -530,6 +530,19 @@ void DrawBigNumber(int Resource, int X, int Y)
 	SDL_BlitSurface(GfxData[CASTLE],&rectb,GfxData[SCREEN],&recta);
 }*/
 
+/**
+ * Draws the static menu elements and the buttons (all unselected).
+ */ 
+void DrawMenuBackground()
+{
+    int i;
+    
+    DrawBackground();
+    DrawLogo();
+    for (i=0;i<6;i++)
+		DrawMenuItem(i,0);
+}
+
 //GE: Draw menu buttons.
 void DrawMenuItem(int Type, char Lit)
 {
@@ -562,48 +575,47 @@ int Menu()
 	float DrawScale = FMin((float)ResX/1600.0, (float)ResY/1200.0);
 	int LitButton = -1; //GE: Which button is lit.
 
-	for (i=0;i<6;i++)
-		DrawMenuItem(i,0);
-	
+    DrawMenuBackground();
 	UpdateScreen();
 	
 	//Sound_Play(TITLE);
 
 	while (value == -1)
 	{
-	    SDL_PollEvent(&event);
-	    switch (event.type)
+        SDL_PollEvent(&event);
+        switch (event.type)
 	    {
-		case SDL_QUIT:
+        case SDL_QUIT:
 		    value=QUIT;
 		    break;
 		case SDL_MOUSEMOTION:
-		    for (i=0; i<6; i++)
+            for (i=0; i<6; i++)
 		    {
-			if ( (i < 3
-			&& FInRect(event.motion.x/ResX, event.motion.y/ResY,
-			(2.0*i+1.0)/6.0-(250.0*DrawScale/ResX/2.0), //GE: These correspond to entries in DrawMenuItem().
-			((130.0/600.0)-(108.0*DrawScale/600.0))/2.0,
-			(2.0*i+1.0)/6.0+(250.0*DrawScale/ResX/2.0),
-			((130.0/600.0)+(108.0*DrawScale/600.0))/2.0))
-			|| (i >= 3
-			&& FInRect(event.motion.x/ResX, event.motion.y/ResY,
-			(2.0*(i-3.0)+1.0)/6.0-(250.0*DrawScale/ResX/2.0),
-			((600.0-130.0/2.0)-(108.0*DrawScale/2.0))/600.0,
-			(2.0*(i-3.0)+1.0)/6.0+(250.0*DrawScale/ResX/2.0),
-			((600.0-130.0/2.0)+(108.0*DrawScale/2.0))/600.0))
-			)
+                if ( (i < 3
+                && FInRect(event.motion.x/ResX, event.motion.y/ResY,
+                (2.0*i+1.0)/6.0-(250.0*DrawScale/ResX/2.0), //GE: These correspond to entries in DrawMenuItem().
+                ((130.0/600.0)-(108.0*DrawScale/600.0))/2.0,
+                (2.0*i+1.0)/6.0+(250.0*DrawScale/ResX/2.0),
+                ((130.0/600.0)+(108.0*DrawScale/600.0))/2.0))
+                || (i >= 3
+                && FInRect(event.motion.x/ResX, event.motion.y/ResY,
+                (2.0*(i-3.0)+1.0)/6.0-(250.0*DrawScale/ResX/2.0),
+                ((600.0-130.0/2.0)-(108.0*DrawScale/2.0))/600.0,
+                (2.0*(i-3.0)+1.0)/6.0+(250.0*DrawScale/ResX/2.0),
+                ((600.0-130.0/2.0)+(108.0*DrawScale/2.0))/600.0))
+                )
 			{
-			    if (LitButton < 0) //GE: We are on a button, and there are no lit buttons. Light the current one.
-			    {
-				DrawMenuItem(i, 1);
-				UpdateScreen();
-				LitButton = i;
+                if (LitButton < 0) //GE: We are on a button, and there are no lit buttons. Light the current one.
+                {
+                    DrawMenuBackground();
+                    DrawMenuItem(i, 1);
+                    UpdateScreen();
+                    LitButton = i;
 			    }
 			}
 			else if (LitButton == i) //GE: We are not on the current button, yet it is lit.
 			{
-			    DrawMenuItem(i, 0);
+			    DrawMenuBackground();
 			    UpdateScreen();
 			    LitButton = -1;
 			}
