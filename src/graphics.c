@@ -256,7 +256,7 @@ void NewDrawCard(int C, int X, int Y, SDL_Surface* Sourface, Uint8 Alpha)//GE: S
  * database - it only needs the number of the card in hand and the
  * player in question.
  */
-void DrawCardAlpha(int8 Player, int8 Number, float X, float Y, float Alpha)
+void DrawCardAlpha(char Player, char Number, float X, float Y, float Alpha)
 {
     //GE: Draw the background.
     //GE: First, get the background that we will be using.
@@ -308,7 +308,7 @@ void DrawCardAlpha(int8 Player, int8 Number, float X, float Y, float Alpha)
 	}*/
 }
 
-inline void DrawCard(int8 Player, int8 Number, float X, float Y)
+inline void DrawCard(char Player, char Number, float X, float Y)
 {
 	DrawCardAlpha(Player, Number, X, Y, 0.0);
 }

@@ -47,7 +47,7 @@ void SetSoundPlay(void (*SoundPlay) (int));
 void SetRedrawScreen(void (*RedrawScreen) () );
 void SetPlayCardAnimation(void (*PlayCardAnimation) (int, int) );
 int GetConfig(int Type);
-int GetColourType(int8 PlayerNum, int8 CardNum);
+int GetColourType(char PlayerNum, char CardNum);
 
 char* GetFilePath(char* FileName);
 void initGame();
