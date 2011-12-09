@@ -582,7 +582,11 @@ int Menu()
 
 	while (value == -1)
 	{
-        SDL_PollEvent(&event);
+        if (!SDL_PollEvent(&event)) //GE: Read the event loop. If it's empty, sleep instead of repeating the old events.
+        {
+            SDL_Delay(0);
+            continue;
+        }
         switch (event.type)
 	    {
         case SDL_QUIT:
@@ -604,46 +608,48 @@ int Menu()
                 (2.0*(i-3.0)+1.0)/6.0+(250.0*DrawScale/ResX/2.0),
                 ((600.0-130.0/2.0)+(108.0*DrawScale/2.0))/600.0))
                 )
-			{
-                if (LitButton < 0) //GE: We are on a button, and there are no lit buttons. Light the current one.
+                {
+                    if (LitButton < 0) //GE: We are on a button, and there are no lit buttons. Light the current one.
+                    {
+                        DrawMenuBackground();
+                        DrawMenuItem(i, 1);
+                        UpdateScreen();
+                        LitButton = i;
+                    }
+                }
+                else if (LitButton == i) //GE: We are not on the current button, yet it is lit.
                 {
                     DrawMenuBackground();
-                    DrawMenuItem(i, 1);
                     UpdateScreen();
-                    LitButton = i;
-			    }
-			}
-			else if (LitButton == i) //GE: We are not on the current button, yet it is lit.
-			{
-			    DrawMenuBackground();
-			    UpdateScreen();
-			    LitButton = -1;
-			}
+                    LitButton = -1;
+                }
 		    }
 		    break;
 		case SDL_MOUSEBUTTONUP:
 		    if (event.button.button==SDL_BUTTON_LEFT)
 		    {
-			for (i=0; i<6; i++)
-			{
-			    if ( (i < 3
-			    && FInRect(event.motion.x/ResX, event.motion.y/ResY,
-			    (2.0*i+1.0)/6.0-(250.0*DrawScale/ResX/2.0), //GE: These correspond to entries in DrawMenuItem().
-			    ((130.0/600.0)-(108.0*DrawScale/600.0))/2.0,
-			    (2.0*i+1.0)/6.0+(250.0*DrawScale/ResX/2.0),
-			    ((130.0/600.0)+(108.0*DrawScale/600.0))/2.0))
-			    || (i >= 3
-			    && FInRect(event.motion.x/ResX, event.motion.y/ResY,
-			    (2.0*(i-3.0)+1.0)/6.0-(250.0*DrawScale/ResX/2.0),
-			    ((600.0-130.0/2.0)-(108.0*DrawScale/2.0))/600.0,
-			    (2.0*(i-3.0)+1.0)/6.0+(250.0*DrawScale/ResX/2.0),
-			    ((600.0-130.0/2.0)+(108.0*DrawScale/2.0))/600.0))
-			    )
-			    {
-				printf("Debug: Menu: MouseUp with %d\n", i);
-				value = i;
-			    }
-			}
+                for (i=0; i<6; i++)
+                {
+                    if ( (i < 3
+                    && FInRect(event.motion.x/ResX, event.motion.y/ResY,
+                    (2.0*i+1.0)/6.0-(250.0*DrawScale/ResX/2.0), //GE: These correspond to entries in DrawMenuItem().
+                    ((130.0/600.0)-(108.0*DrawScale/600.0))/2.0,
+                    (2.0*i+1.0)/6.0+(250.0*DrawScale/ResX/2.0),
+                    ((130.0/600.0)+(108.0*DrawScale/600.0))/2.0))
+                    || (i >= 3
+                    && FInRect(event.motion.x/ResX, event.motion.y/ResY,
+                    (2.0*(i-3.0)+1.0)/6.0-(250.0*DrawScale/ResX/2.0),
+                    ((600.0-130.0/2.0)-(108.0*DrawScale/2.0))/600.0,
+                    (2.0*(i-3.0)+1.0)/6.0+(250.0*DrawScale/ResX/2.0),
+                    ((600.0-130.0/2.0)+(108.0*DrawScale/2.0))/600.0))
+                    )
+                    {
+                        printf("Debug: Menu: MouseUp with %d\n", i);
+                        value = i;
+                    }
+                }
+                UpdateScreen();//GE: Workaround for black screen on certain drivers
+                UpdateScreen();
 		    }
 		    break;
 	    }

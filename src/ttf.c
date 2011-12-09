@@ -55,11 +55,11 @@ void RenderLine(char* text, TTF_Font* font, SDL_Color color, SDL_Rect location)
  * 
  * It works in this fashion: It requests a string array (the words in
  * the description of a card) from D, then counts the length of the
- * words in 90px (9*10). It then finds out how many lines said string
- * would take up if it was bound to a rectangle. If it's more than is
- * allowed, then it scales the size twice. If it fits, it scales up and
- * repeats until the size is correct. Perhaps trial and error are not
- * necessary and this can be done using a formula?
+ * words in 90px (9*10). It then tests if the word fits into the given
+ * rectangle. If it does, it checks if a space and another word fits.
+ * Repeats as necessary until it no longer fits, then tries to see if
+ * it fits in a new line. If it doesn't, it halves the font size and
+ * tries again.
  */
 int FindOptimalFontSize(SDL_Rect CardSize)
 {
@@ -67,21 +67,51 @@ int FindOptimalFontSize(SDL_Rect CardSize)
     int* NumWords;
     char*** Words = GetCardDescriptionWords(&NumSentences, &NumWords);
     int Sentence, Word;
-    int** WordLengthList;
     TTF_Font* ProbeFont;
     
-    TTF_OpenFont(GetFilePath("fonts/FreeSans.ttf"), 90); //GE: Probe with 9*10, because it gives us good enough resolution (we won't support over 8000x6000 anyway)
-    WordLengthList = (int**) malloc(sizeof(int*)*NumSentences); //GE: Set WordLengthList.length = NumSentences;
+    int SizeMin=1, SizeMax=90, CurrentSize=90; //GE: The minimum and maximum possible font sizes we have probed so far.
+    int SpaceLength, LineHeight;
+    float SizeScale;
+    int LineLength=0, TextHeight=0;
+    int WordLength;
+    char Fits=1;
+    
+    TTF_OpenFont(GetFilePath("fonts/FreeSans.ttf"), SizeMax); //GE: Probe with 9*10, because it gives us good enough resolution (we won't support over 8000x6000 anyway)
+    TTF_SizeText(ProbeFont, " ", &SpaceLength, NULL);
+    LineHeight = TTF_FontLineSkip(ProbeFont);
     
     for (Sentence = 0; Sentence < NumSentences; Sentence++)
     {
-        WordLengthList[Sentence] = (int*) malloc(sizeof(int)*NumWords[Sentence]); //GE: Set WordLengthList[Sentence].length = NumWords[Sentence];
+        TextHeight = LineHeight;
         for (Word = 0; Word < NumWords[Sentence]; Word++)
         {
-            TTF_SizeText(ProbeFont, Words[Sentence][Word], &WordLengthList[Sentence][Word], NULL); //GE: Populate the word length list.
+            TTF_SizeText(ProbeFont, Words[Sentence][Word], &WordLength, NULL); //GE: Set the current word length.
+            if ((LineLength == 0 && LineLength + WordLength > CardSize.w)
+                ||(LineLength > 0 && LineLength + SpaceLength + WordLength > CardSize.w)) //GE: This word won't fit.
+                {
+                    TextHeight += LineHeight; //GE: Let's see if we can fit it on a new line.
+                    LineLength = WordLength;
+                }
+            else if (LineLength == 0)
+                LineLength += WordLength;
+            else
+                LineLength += SpaceLength + WordLength;
         }
-        //Words[Sentence] means a sentence
+        if (TextHeight > CardSize.h)
+        {
+            Fits = 0;
+            break;
+        }
     }
+}
+
+/**
+ * Utility functions for FindOptimalFontSize.
+ */ 
+
+int GetWordLength(char*** WordList, int NumWords, int* NumSentences)
+{
+    
 }
 
 /**
