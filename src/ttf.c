@@ -69,12 +69,12 @@ int FindOptimalFontSize(SDL_Rect CardSize)
     int Sentence, Word;
     TTF_Font* ProbeFont;
     
-    int SizeMin=1, SizeMax=90, CurrentSize=90; //GE: The minimum and maximum possible font sizes we have probed so far.
-    int SpaceLength, LineHeight;
+    int SizeMin=1, SizeMax=90, OptimalSize=90, TestedSize; //GE: The minimum and maximum possible font sizes we have probed so far.
+    int SpaceLength, ScaledSpaceLength, LineHeight, ScaledLineHeight;
     float SizeScale;
     int LineLength=0, TextHeight=0;
     int WordLength;
-    char Fits=1;
+    //char Fits=1;
     
     TTF_OpenFont(GetFilePath("fonts/FreeSans.ttf"), SizeMax); //GE: Probe with 9*10, because it gives us good enough resolution (we won't support over 8000x6000 anyway)
     TTF_SizeText(ProbeFont, " ", &SpaceLength, NULL);
@@ -82,27 +82,49 @@ int FindOptimalFontSize(SDL_Rect CardSize)
     
     for (Sentence = 0; Sentence < NumSentences; Sentence++)
     {
-        TextHeight = LineHeight;
-        for (Word = 0; Word < NumWords[Sentence]; Word++)
+        while(SizeMax-SizeMin > 1)
         {
-            TTF_SizeText(ProbeFont, Words[Sentence][Word], &WordLength, NULL); //GE: Set the current word length.
-            if ((LineLength == 0 && LineLength + WordLength > CardSize.w)
-                ||(LineLength > 0 && LineLength + SpaceLength + WordLength > CardSize.w)) //GE: This word won't fit.
-                {
-                    TextHeight += LineHeight; //GE: Let's see if we can fit it on a new line.
-                    LineLength = WordLength;
-                }
-            else if (LineLength == 0)
-                LineLength += WordLength;
+            TestedSize = (SizeMin+SizeMax)/2;
+            SizeScale = TestedSize/90.0;
+            
+            TextHeight = LineHeight;
+            for (Word = 0; Word < NumWords[Sentence]; Word++)
+            {
+                TTF_SizeText(ProbeFont, Words[Sentence][Word], &WordLength, NULL); //GE: Set the current word length.
+                WordLength *= SizeScale;
+                ScaledSpaceLength = SpaceLength*SizeScale;
+                ScaledLineHeight = LineHeight*SizeScale;
+                if ((LineLength == 0 && LineLength + WordLength > CardSize.w)
+                    ||(LineLength > 0 && LineLength + ScaledSpaceLength + WordLength > CardSize.w)) //GE: This word won't fit.
+                    {
+                        if (WordLength > CardSize.w)//GE: A single word won't fit, automatic fail
+                        {
+                            SizeMin = TestedSize;
+                            break;
+                        }
+                        TextHeight += ScaledLineHeight; //GE: Let's see if we can fit it on a new line.
+                        LineLength = WordLength;
+                    }
+                else if (LineLength == 0)
+                    LineLength += WordLength;
+                else
+                    LineLength += ScaledSpaceLength + WordLength;
+            }
+            if (TextHeight > CardSize.h || SizeMin == TestedSize)
+            {
+                //Fits = 0;
+                SizeMin = TestedSize;
+            }
             else
-                LineLength += SpaceLength + WordLength;
+            {
+                //Fits = 1;
+                SizeMax = TestedSize;
+            }
         }
-        if (TextHeight > CardSize.h)
-        {
-            Fits = 0;
-            break;
-        }
+        OptimalSize = Min(OptimalSize, SizeMax);
     }
+    
+    return OptimalSize;
 }
 
 /**
