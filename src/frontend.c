@@ -12,6 +12,7 @@
 #include <stdarg.h>
 #include "adapter.h"
 #include "graphics.h"
+#include "ttf.h"
 
 /**
  * Utility function for printing out error messages.
@@ -51,6 +52,7 @@ int main(int argc,char *argv[])
 {
     int MenuAction;
     int i, n;
+    SizeF TestSize={0.0, 0.0};
     ////srand((unsigned)time(NULL));
 
     rt_init(); //Init D
@@ -58,6 +60,7 @@ int main(int argc,char *argv[])
     //if (Config.SoundEnabled) //Init SDL
     //    Sound_Init();
     Graphics_Init();
+    InitTTF();
     initGame(); //Init a 1vs1 game, will choose player types later
 
     MenuAction = Menu();//while ((m=Menu())!=4)//5)
@@ -76,6 +79,7 @@ int main(int argc,char *argv[])
             for (n=0; n<2; n++)
                 for (i=0; i<GetConfig(CardsInHand); i++)
                     DrawCard(n, i, 1.0/GetConfig(CardsInHand)*i, 0.77*n);
+            RenderLine("This is a test string!", TestSize);
             UpdateScreen();
             getchar();
             //Player[Turn].Name = "Player";

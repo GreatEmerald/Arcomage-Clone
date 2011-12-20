@@ -264,7 +264,7 @@ void DrawCardAlpha(char Player, char Number, float X, float Y, float Alpha)
     
     SDL_Rect ItemPosition;
     SizeF ScreenPosition = {X, Y};
-    float DrawScale = FMin((float)GetConfig(ResolutionX)/1600.0, (float)GetConfig(ResolutionY)/1200.0);
+    float DrawScale = GetDrawScale();
     
     ItemPosition.x = Colour * 192;  ItemPosition.w = 192; //GE: Careful here. Colours must be in the same order as they are in the picture and the adapter must match.
     ItemPosition.y = 324;           ItemPosition.h = 256;
@@ -317,7 +317,7 @@ void DrawFoldedAlpha(int Team, float X, float Y, float Alpha)
 {
     SDL_Rect DeckPosition;
     SizeF ScreenPosition;
-    float DrawScale = FMin((float)GetConfig(ResolutionX)/1600.0, (float)GetConfig(ResolutionY)/1200.0);
+    float DrawScale = GetDrawScale();
     
     ScreenPosition.X = X; ScreenPosition.Y = Y;
     
@@ -550,7 +550,7 @@ void DrawMenuItem(int Type, char Lit)
     SizeF DestinationCoords = {0.0,0.0};
     float ResX = (float)GetConfig(ResolutionX);
     float ResY = (float)GetConfig(ResolutionY);
-    float DrawScale = FMin((float)ResX/1600.0, (float)ResY/1200.0);
+    float DrawScale = GetDrawScale();
     
     if (Type < 3)
     {
@@ -572,7 +572,7 @@ int Menu()
 	int i,/*j,*/value=-1;
 	float ResX = (float)GetConfig(ResolutionX);
 	float ResY = (float)GetConfig(ResolutionY);
-	float DrawScale = FMin((float)ResX/1600.0, (float)ResY/1200.0);
+	float DrawScale = GetDrawScale();
 	int LitButton = -1; //GE: Which button is lit.
 
     DrawMenuBackground();
@@ -711,7 +711,7 @@ void DrawUI()
     //GE: Draw status boxes
     SDL_Rect ItemPosition;
     SizeF ScreenPosition;
-    float DrawScale = FMin((float)GetConfig(ResolutionX)/1600.0, (float)GetConfig(ResolutionY)/1200.0);
+    float DrawScale = GetDrawScale();
     
     ItemPosition.x = 1181; ItemPosition.y = 0;
     ItemPosition.w = 78; ItemPosition.h = 216;
@@ -781,7 +781,7 @@ void DrawLogo()
 {
     SDL_Rect ItemPosition;
     SizeF ScreenPosition;
-    float DrawScale = FMin((float)GetConfig(ResolutionX)/1600.0, (float)GetConfig(ResolutionY)/1200.0);
+    float DrawScale = GetDrawScale();
     
     ScreenPosition.X = (800.0/2.0-TextureCoordinates[TITLE].X/2.0)/800.0; ScreenPosition.Y = (600.0/2.0-TextureCoordinates[TITLE].Y/2.0)/600.0;
     
@@ -792,6 +792,15 @@ void DrawLogo()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+
+/**
+ * Returns the element draw size depending on the currently selected
+ * window resolution.
+ */ 
+inline float GetDrawScale()
+{
+    return FMin((float)GetConfig(ResolutionX)/1600.0, (float)GetConfig(ResolutionY)/1200.0);
+}
 
 float FMax(float A, float B)
 {

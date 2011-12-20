@@ -50,6 +50,7 @@ int GetConfig(int Type);
 int GetColourType(char PlayerNum, char CardNum);
 
 char* GetFilePath(char* FileName);
+char*** GetCardDescriptionWords(int* NumSentences, int** NumWords);
 void initGame();
 
 #endif

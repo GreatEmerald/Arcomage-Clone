@@ -72,5 +72,6 @@ void LoadSurface(char* filename, int Slot);
 void DoCredits();
 float FMax(float A, float B);
 float FMin(float A, float B);
+float GetDrawScale();
 
 #endif
