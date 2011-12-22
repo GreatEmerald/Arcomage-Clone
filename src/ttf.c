@@ -9,11 +9,27 @@
 #include <SDL_ttf.h>
 #include "graphics.h"
 #include <SDL_opengl.h>
+#include "opengl.h"
 #include "adapter.h"
 #include "ttf.h"
 
+/*typedef struct S_OpenGLTexture
+{
+    GLuint Texture;
+    Size TextureSize;
+} OpenGLTexture;
+
+struct S_CachedCard
+{
+    OpenGLTexture TitleTexture;
+    OpenGLTexture PictureTexture;
+    OpenGLTexture* DescriptionTextures;
+    int DescriptionNum;
+    OpenGLTexture PriceTexture[3]; //GE: Bricks, gems, recruits
+};*/
+
 TTF_Font* CurrentFont; //GE: The font that is currently loaded. Only one right now.
-GLuint** PrecachedDescriptions; //GE: An array of textures for quick rendering. Must match the CardDB[][] in D!
+GLuint** FontCache; //GE: An array of textures for quick rendering. Must match the CardDB[][] in D!
 
 /**
  * A shortened initialisation function for TTF.
@@ -28,15 +44,20 @@ void InitTTF()
         FatalError(TTF_GetError());
 }
 
+void QuitTTF()
+{
+    TTF_CloseFont(CurrentFont);
+    TTF_Quit();
+}
+
 /**
  * Render a single line. Do not use for formatted text!
  * Authors: C-Junkie, GreatEmerald
  */ 
-void RenderLine(char* text, SizeF location)
+void DrawTextLine(char* text, SizeF location)
 {
 
 	SDL_Surface *initial;
-	SDL_Surface *intermediary;
 	SDL_Rect rect = {0, 0, 0, 0};
 	int w,h;
 	int texture;
@@ -46,26 +67,16 @@ void RenderLine(char* text, SizeF location)
 	/* Use SDL_TTF to render our text */
 	initial = TTF_RenderText_Blended(CurrentFont, text, color);
 
-	/* Convert the rendered text to a known format */
-    //GE: Probably not necessary when we have support for non-power of 2 textures.
-	w = nextpoweroftwo(initial->w);
-	h = nextpoweroftwo(initial->h);
-
-	intermediary = SDL_CreateRGBSurface(0, w, h, 32, 0x00ff0000, 0x0000ff00, 0x000000ff, 0xff000000);
-
-	SDL_BlitSurface(initial, 0, intermediary, 0);
-
 	/* Tell GL about our new texture */
-    texture = SurfaceToTexture(intermediary);
+    texture = SurfaceToTexture(initial);
     
-    TTF_SizeText(CurrentFont, text, &w, &h); //GE: Reusing w and h, since they are expendable at this point
+    TTF_SizeText(CurrentFont, text, &w, &h);
     rect.w = w; rect.h = h;
     TextureSize.X = w; TextureSize.Y= h;
     DrawTexture(texture, TextureSize, rect, location, 1.0);
 
 	/* Clean up */
 	SDL_FreeSurface(initial);
-	SDL_FreeSurface(intermediary);
 	glDeleteTextures(1, &texture);
 }
 
@@ -83,7 +94,8 @@ void RenderLine(char* text, SizeF location)
  */
 int FindOptimalFontSize()
 {
-    Size CardSize = {(int)(GetDrawScale()*0.5*88), (int)(GetDrawScale()*0.5*53)}; //GE: Size in pixels indicating the draw area of a card.
+    time_t DeltaTime = time(NULL);
+    Size CardSize = {(int)(GetDrawScale()*2*88), (int)(GetDrawScale()*2*53)}; //GE: Size in pixels indicating the draw area of a card.
     int NumSentences;
     int* NumWords;
     
@@ -96,8 +108,6 @@ int FindOptimalFontSize()
     float SizeScale;
     int LineLength=0, TextHeight=0;
     int WordLength;
-    //char Fits=1;
-    clock_t DeltaTime = clock();
     
     ProbeFont = TTF_OpenFont(GetFilePath("fonts/FreeSans.ttf"), SizeMax); //GE: Probe with 9*10, because it gives us good enough resolution (we won't support over 8000x6000 anyway)
     TTF_SizeText(ProbeFont, " ", &SpaceLength, NULL);
@@ -107,23 +117,24 @@ int FindOptimalFontSize()
     {
         while(SizeMax-SizeMin > 1)
         {
+            LineLength = 0;
             TestedSize = (SizeMin+SizeMax)/2;
             SizeScale = TestedSize/90.0;
             
-            TextHeight = LineHeight;
+            ScaledSpaceLength = SpaceLength*SizeScale;
+            ScaledLineHeight = LineHeight*SizeScale;
+            TextHeight = ScaledLineHeight;
             for (Word = 0; Word < NumWords[Sentence]; Word++)
             {
-                printf("Debug: FindOptimalFontSize: Iterating through %s, total sentences %d and words %d, iteration %d.\n", Words[Sentence][Word], NumSentences, NumWords[Sentence], Word);
                 TTF_SizeText(ProbeFont, Words[Sentence][Word], &WordLength, NULL); //GE: Set the current word length.
                 WordLength *= SizeScale;
-                ScaledSpaceLength = SpaceLength*SizeScale;
-                ScaledLineHeight = LineHeight*SizeScale;
+                
                 if ((LineLength == 0 && LineLength + WordLength > CardSize.X)
                     ||(LineLength > 0 && LineLength + ScaledSpaceLength + WordLength > CardSize.X)) //GE: This word won't fit.
                     {
                         if (WordLength > CardSize.X)//GE: A single word won't fit, automatic fail
                         {
-                            SizeMin = TestedSize;
+                            SizeMax = TestedSize;
                             break;
                         }
                         TextHeight += ScaledLineHeight; //GE: Let's see if we can fit it on a new line.
@@ -134,24 +145,20 @@ int FindOptimalFontSize()
                 else
                     LineLength += ScaledSpaceLength + WordLength;
             }
-            if (TextHeight > CardSize.Y || SizeMin == TestedSize)
-            {
-                //Fits = 0;
-                SizeMin = TestedSize;
-            }
-            else
-            {
-                //Fits = 1;
+            if (TextHeight > CardSize.Y || SizeMax == TestedSize)
                 SizeMax = TestedSize;
-            }
+            else
+                SizeMin = TestedSize;
         }
         OptimalSize = Min(OptimalSize, SizeMax);
+        //printf("Debug: FindOptimalFontSize: Optimal size is now %d, on sentence %d.\n", OptimalSize, Sentence);
+        SizeMin = 1;
     }
     
     TTF_CloseFont(ProbeFont);
     
-    DeltaTime = clock() - DeltaTime;
-    printf("Info: FindOptimalFontSize: You can save %d seconds if you precache your font size as %d!\n", DeltaTime*CLOCKS_PER_SEC, OptimalSize);
+    DeltaTime = time(NULL) - DeltaTime;
+    printf("Info: FindOptimalFontSize: You can save %d seconds if you precache your font size as %d!\n", DeltaTime, OptimalSize);
     return OptimalSize;
 }
 

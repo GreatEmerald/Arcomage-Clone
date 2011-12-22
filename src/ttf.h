@@ -2,7 +2,8 @@
 #define _TTF_H_
 
 void InitTTF();
-void RenderLine(char* text, SizeF location);
+void QuitTTF();
+void DrawTextLine(char* text, SizeF location);
 int FindOptimalFontSize();
 //int round(double x);
 int nextpoweroftwo(int x);

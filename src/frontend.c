@@ -30,6 +30,20 @@ void FatalError(char *fmt,...)
 }
 
 /**
+ * Game initialisation.
+ */ 
+void Init()
+{
+    rt_init(); //Init D
+    InitArcomage(); //Init libarcomage
+    //if (Config.SoundEnabled) //Init SDL
+    //    Sound_Init();
+    Graphics_Init();
+    InitTTF();
+    initGame(); //Init a 1vs1 game, will choose player types later
+}
+
+/**
  * Game termination and memory cleanup.
  */ 
 void Quit()
@@ -52,19 +66,12 @@ int main(int argc,char *argv[])
 {
     int MenuAction;
     int i, n;
-    SizeF TestSize={0.0, 0.0};
+    SizeF TestLocation={0.0, 0.0};
     ////srand((unsigned)time(NULL));
-
-    rt_init(); //Init D
-    InitArcomage(); //Init libarcomage
-    //if (Config.SoundEnabled) //Init SDL
-    //    Sound_Init();
-    Graphics_Init();
-    InitTTF();
-    initGame(); //Init a 1vs1 game, will choose player types later
-
+    
+    Init();
     MenuAction = Menu();//while ((m=Menu())!=4)//5)
-    printf("Debug: main: MenuAction is %d\n", MenuAction);
+    //printf("Debug: main: MenuAction is %d\n", MenuAction);
     //{
     switch (MenuAction)//    switch (m)
     {
@@ -79,7 +86,7 @@ int main(int argc,char *argv[])
             for (n=0; n<2; n++)
                 for (i=0; i<GetConfig(CardsInHand); i++)
                     DrawCard(n, i, 1.0/GetConfig(CardsInHand)*i, 0.77*n);
-            RenderLine("This is a test string!", TestSize);
+            DrawTextLine("This is a test string!", TestLocation);
             UpdateScreen();
             getchar();
             //Player[Turn].Name = "Player";
@@ -103,7 +110,7 @@ int main(int argc,char *argv[])
             //DoCredits();
     //        break;
     //    }
-    default: break;
+        default: break;
     }//}
 
     Quit();
