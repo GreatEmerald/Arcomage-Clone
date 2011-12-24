@@ -46,6 +46,24 @@ typedef struct S_Range
 {
 	float X; float Y;
 } SizeF;
+
+typedef struct S_OpenGLTexture
+{
+    GLuint Texture;
+    Size TextureSize;
+} OpenGLTexture;
+
+typedef struct S_CachedCard
+{
+    OpenGLTexture TitleTexture;
+    OpenGLTexture PictureTexture;
+    OpenGLTexture* DescriptionTextures;
+    int DescriptionNum;
+    OpenGLTexture PriceTexture[3]; //GE: Bricks, gems, recruits
+} CachedCard;
+
+CachedCard** CardCache;
+
 void PrecacheCard(const char* File, size_t Size);
 
 void Graphics_Init();

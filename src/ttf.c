@@ -5,6 +5,8 @@
  
 #include <math.h>
 #include <stdio.h>
+#include <stdarg.h>
+#include <string.h>
 #include <time.h>
 #include <SDL_ttf.h>
 #include "graphics.h"
@@ -13,35 +15,58 @@
 #include "adapter.h"
 #include "ttf.h"
 
-/*typedef struct S_OpenGLTexture
+struct S_CardDescriptions
 {
-    GLuint Texture;
-    Size TextureSize;
-} OpenGLTexture;
-
-struct S_CachedCard
-{
-    OpenGLTexture TitleTexture;
-    OpenGLTexture PictureTexture;
-    OpenGLTexture* DescriptionTextures;
-    int DescriptionNum;
-    OpenGLTexture PriceTexture[3]; //GE: Bricks, gems, recruits
-};*/
+    char***** Text;
+    int NumPools;
+    int* NumSentences;
+    int** NumLines;
+    int*** NumWords;
+};
 
 TTF_Font* CurrentFont; //GE: The font that is currently loaded. Only one right now.
 GLuint** FontCache; //GE: An array of textures for quick rendering. Must match the CardDB[][] in D!
+struct S_CardDescriptions CardDescriptions;
 
 /**
  * A shortened initialisation function for TTF.
  */
 void InitTTF()
 {
+    int a, b, c, d;
+    
     if (TTF_Init()) //GE: Abusing the fact that -1 is considered true
         FatalError(TTF_GetError());
+    
+    CardDescriptions.Text = GetCardDescriptionWords(&(CardDescriptions.NumPools), &(CardDescriptions.NumSentences), &(CardDescriptions.NumLines), &(CardDescriptions.NumWords));
     
     CurrentFont = TTF_OpenFont(GetFilePath("fonts/FreeSans.ttf"), FindOptimalFontSize()); //GE: Make sure D is initialised first here.
     if (CurrentFont == NULL)
         FatalError(TTF_GetError());
+    
+    //GE: <insert card precaching here>
+    //GE: Deallocate the card descriptions, since we initialised them in this function as well.
+    for (a=0; a<CardDescriptions.NumPools; a++)
+    {
+        for (b=0; b<CardDescriptions.NumSentences[a]; b++)
+        {
+            for (c=0; c<CardDescriptions.NumLines[a][b]; c++)
+                free(CardDescriptions.Text[a][b][c]);
+            free(CardDescriptions.Text[a][b]);
+            free(CardDescriptions.NumWords[a][b]);
+        }
+        free(CardDescriptions.Text[a]);
+        free(CardDescriptions.NumLines[a]);
+        free(CardDescriptions.NumWords[a]);
+    }
+    free(CardDescriptions.Text);
+    free(CardDescriptions.NumSentences);
+    free(CardDescriptions.NumLines);
+    free(CardDescriptions.NumWords);
+    CardDescriptions.Text = NULL;
+    CardDescriptions.NumSentences = NULL;
+    CardDescriptions.NumLines = NULL;
+    CardDescriptions.NumWords = NULL;
 }
 
 void QuitTTF()
@@ -60,7 +85,7 @@ void DrawTextLine(char* text, SizeF location)
 	SDL_Surface *initial;
 	SDL_Rect rect = {0, 0, 0, 0};
 	int w,h;
-	int texture;
+	GLuint texture;
     SDL_Color color = {0, 0, 0};
     Size TextureSize;
 
@@ -80,6 +105,14 @@ void DrawTextLine(char* text, SizeF location)
 	glDeleteTextures(1, &texture);
 }
 
+void DrawTextCentred(char* Text, SizeF Destination, SizeF BoundingBox)
+{
+    int TextWidth;
+    TTF_SizeText(CurrentFont, text, &TextWidth, NULL);
+    Destination.X += (Destination.X - TextWidth/(float)GetConfig(ResolutionX))/2.0
+    DrawTextLine(Text, Destination);
+}
+
 /**
  * Finds the best font size for the current resolution and deck. May be
  * slow.
@@ -94,7 +127,7 @@ void DrawTextLine(char* text, SizeF location)
  */
 int FindOptimalFontSize()
 {
-    time_t DeltaTime = time(NULL);
+    /*time_t DeltaTime = time(NULL);
     Size CardSize = {(int)(GetDrawScale()*2*88), (int)(GetDrawScale()*2*53)}; //GE: Size in pixels indicating the draw area of a card.
     int NumSentences;
     int* NumWords;
@@ -159,9 +192,79 @@ int FindOptimalFontSize()
     
     DeltaTime = time(NULL) - DeltaTime;
     printf("Info: FindOptimalFontSize: You can save %d seconds if you precache your font size as %d!\n", DeltaTime, OptimalSize);
-    return OptimalSize;
+    return OptimalSize;*/
+    return 10;
 }
 
+void PrecacheFonts()
+{
+    PrecacheTitleText();
+    PrecacheDescriptionText();
+    PrecachePriceText();
+}
+
+void PrecacheDescriptionText()
+{
+    Size CardSize = {(int)(GetDrawScale()*2*88), (int)(GetDrawScale()*2*53)};
+    int Pool, Sentence, Line, Word;
+    int SpaceLength;
+    int LineHeight; TTF_SizeText(CurrentFont, " ", &SpaceLength, &LineHeight);
+    int WordLength, LineLength;
+    int LastLineEnd;
+    int i;
+    int TextSize;
+    char* CurrentLine;
+    GLuint CurrentTexture;
+    Size TextureSize;
+    
+    for (Pool = 0; Pool < CardDescriptions.NumPools; Pool++)
+    {
+        for (Sentence = 0; Sentence < CardDescriptions.NumSentences; Sentence++)
+        {
+            for (Line = 0; Sentence < CardDescriptions.NumLines; Line++)
+            {
+                LineLength = 0;
+                LastLineEnd = 0;
+                
+                for (Word = 0; Word < NumWords[Sentence]; Word++)
+                {
+                    TTF_SizeText(CurrentFont, CardDescriptions.Text[Pool][Sentence][Line][Word], &WordLength, NULL); //GE: Set the current word length.
+                    
+                    if ((LineLength == 0 && LineLength + WordLength > CardSize.X)
+                    ||(LineLength > 0 && LineLength + SpaceLength + WordLength > CardSize.X)) //GE: Next word won't fit.
+                    {
+                        //GE: This line is full, write to cache.
+                        for (i=0; i < Word-LastLineEnd; i++)
+                            TextSize += strlen(CardDescriptions.Text[Pool][Sentence][Line][i]);
+                        CurrentLine = (char*) malloc((TextSize+1)*sizeof(char));
+                        strcpy(CurrentLine, CardDescriptions.Text[Pool][Sentence][Line][0]);
+                        for (i=1; i < Word-LastLineEnd; i++)
+                        {
+                            strcat(CurrentLine, " ");
+                            strcat(CurrentLine, CardDescriptions.Text[Pool][Sentence][Line][i]);
+                        }
+                        CurrentTexture = TextToTexture(CurrentFont, CurrentLine);
+                        TTF_SizeText(CurrentFont, CurrentLine, &(TextureSize.X), &(TextureSize.Y));
+                        free(CurrentLine);
+                        
+                        CardCache[Pool][Sentence].DescriptionNum++;
+                        CardCache[Pool][Sentence].DescriptionTextures = (OpenGLTexture*)realloc(CardCache[Pool][Sentence].DescriptionTextures, CardCache[Pool][Sentence].DescriptionNum*sizeof(OpenGLTexture));
+                        //GE: Remember to free this! Also, using the fact that when the pointer to realloc is NULL (and we set it that way when we malloced CardCache), realloc redirects to malloc.
+                        CardCache[Pool][Sentence].DescriptionTextures[CardCache[Pool][Sentence].DescriptionNum-1].Texture = CurrentTexture;
+                        CardCache[Pool][Sentence].DescriptionTextures[CardCache[Pool][Sentence].DescriptionNum-1].TextureSize = TextureSize;
+                            
+                        LastLineEnd = Word;
+                        LineLength = WordLength;
+                    }
+                    else if (LineLength == 0)
+                        LineLength += WordLength;
+                    else
+                        LineLength += SpaceLength + WordLength;
+                }
+            }
+        }
+    }
+}
 
 /**
  * Utility functions for RenderText.
@@ -187,4 +290,47 @@ int Min(int A, int B)
         return A;
     else
         return B;
+}
+
+/**
+ * Concatenate multiple strings.
+ * This must be called with a (char*)NULL as the last argument so that
+ * it would know when to stop, and the resulting string must be freed
+ * afterwards.
+ * Authors: comp.lang.c FAQ list
+ */ 
+char *vstrcat(const char *first, ...)
+{
+	size_t len;
+	char *retbuf;
+	va_list argp;
+	char *p;
+
+	if(first == NULL)
+		return NULL;
+
+	len = strlen(first);
+
+	va_start(argp, first);
+
+	while((p = va_arg(argp, char *)) != NULL)
+		len += strlen(p);
+
+	va_end(argp);
+
+	retbuf = malloc(len + 1);	/* +1 for trailing \0 */
+
+	if(retbuf == NULL)
+		return NULL;		/* error */
+
+	(void)strcpy(retbuf, first);
+
+	va_start(argp, first);		/* restart; 2nd scan */
+
+	while((p = va_arg(argp, char *)) != NULL)
+		(void)strcat(retbuf, p);
+
+	va_end(argp);
+
+	return retbuf;
 }

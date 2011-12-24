@@ -82,6 +82,29 @@ void Graphics_Init()
     BFont_SetCurrentFont(font);*/
 }
 
+void PrecacheCards()
+{
+    int i, n;
+    
+    int NumPools;
+    int* NumCards;
+    GetCardDBSize(&NumPools, &NumCards); //GE: Must free NumCards in this function!
+    
+    CardCache = (CachedCard**) malloc(NumPools * sizeof(CachedCard*)); //GE: Must free CardCache when quitting!
+    
+    for (i=0; i<NumPools; i++)
+    {
+        CardCache[i] = (CachedCard*) malloc(NumCards[i] * sizeof(CachedCard));
+        for (n=0; n<NumCards[i]; n++)
+        {
+            CardCache[i][n].DescriptionNum = 0; //GE: Init the number to 0, since we can't do that when defining the struct.
+            CardCache[i][n].DescriptionTextures = NULL;
+        }
+    }
+    
+    PrecacheFonts();
+}
+
 //GE: Add to the linked list.
 void PrecacheCard(const char* File, size_t Size)
 {

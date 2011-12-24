@@ -48,9 +48,10 @@ void SetRedrawScreen(void (*RedrawScreen) () );
 void SetPlayCardAnimation(void (*PlayCardAnimation) (int, int) );
 int GetConfig(int Type);
 int GetColourType(char PlayerNum, char CardNum);
+void GetCardDBSize(int* NumPools, int** NumCards);
 
 char* GetFilePath(char* FileName);
-char*** GetCardDescriptionWords(int* NumSentences, int** NumWords);
+char***** GetCardDescriptionWords(int* NumPools, int** NumSentences, int*** NumLines, int**** NumWords);
 void initGame();
 
 #endif
