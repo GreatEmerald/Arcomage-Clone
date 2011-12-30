@@ -12,6 +12,7 @@
 #include "graphics.h"
 #include "adapter.h"
 #include "opengl.h"
+#include "ttf.h"
 //#include "input.h"
 //#include "sound.h"
 
@@ -102,7 +103,10 @@ void PrecacheCards()
         }
     }
     
+    free(NumCards);
+    
     PrecacheFonts();
+    //GE: TODO: Precache picture.
 }
 
 //GE: Add to the linked list.
@@ -281,6 +285,14 @@ void NewDrawCard(int C, int X, int Y, SDL_Surface* Sourface, Uint8 Alpha)//GE: S
  */
 void DrawCardAlpha(char Player, char Number, float X, float Y, float Alpha)
 {
+    int i;
+    
+    int Pool, Card;
+    GetCardHandle(Player, Number, &Pool, &Card);
+    SizeF BoundingBox, TextureSize;
+    float Spacing;
+    int BlockHeight=0;
+    
     //GE: Draw the background.
     //GE: First, get the background that we will be using.
     int Colour = GetColourType(Player, Number);
@@ -289,10 +301,71 @@ void DrawCardAlpha(char Player, char Number, float X, float Y, float Alpha)
     SizeF ScreenPosition = {X, Y};
     float DrawScale = GetDrawScale();
     
+    //GEm: Draw background.
     ItemPosition.x = Colour * 192;  ItemPosition.w = 192; //GE: Careful here. Colours must be in the same order as they are in the picture and the adapter must match.
     ItemPosition.y = 324;           ItemPosition.h = 256;
     
-    DrawTexture(GfxData[SPRITES], TextureCoordinates[SPRITES], ItemPosition, ScreenPosition, DrawScale);
+    DrawTextureAlpha(GfxData[SPRITES], TextureCoordinates[SPRITES], ItemPosition, ScreenPosition, DrawScale, Alpha);
+    
+    //GEm: Draw title text.
+    ItemPosition.x = 0; ItemPosition.w = CardCache[Pool][Card].TitleTexture.TextureSize.X;
+    ItemPosition.y = 0; ItemPosition.h = CardCache[Pool][Card].TitleTexture.TextureSize.Y;
+    ScreenPosition.X += 4/(float)GetConfig(ResolutionX); ScreenPosition.Y += 4/(float)GetConfig(ResolutionY);
+    BoundingBox.X = 88/(float)GetConfig(ResolutionX); BoundingBox.Y = 12/(float)GetConfig(ResolutionY);
+    TextureSize.X = CardCache[Pool][Card].TitleTexture.TextureSize.X/(float)GetConfig(ResolutionX); TextureSize.Y = CardCache[Pool][Card].TitleTexture.TextureSize.Y/(float)GetConfig(ResolutionY);
+    ScreenPosition = CentreOnX(ScreenPosition, TextureSize, BoundingBox);
+    
+    DrawTextureAlpha(CardCache[Pool][Card].TitleTexture.Texture, CardCache[Pool][Card].TitleTexture.TextureSize, ItemPosition, ScreenPosition, DrawScale*2, Alpha);
+    
+    //GEm: Draw description text.
+    ScreenPosition.X = X + 4/(float)GetConfig(ResolutionX); ScreenPosition.Y = Y + 72/(float)GetConfig(ResolutionY);
+    for (i=0; i<CardCache[Pool][Card].DescriptionNum; i++)
+        BlockHeight += CardCache[Pool][Card].DescriptionTextures[i].TextureSize.Y; //GEm: Alternatively, I could just multiply one by DescriptionNum, but four iterations are not much.
+    if (BlockHeight <= 41*DrawScale*2 && CardCache[Pool][Card].DescriptionTextures[CardCache[Pool][Card].DescriptionNum].TextureSize.X > 66*DrawScale*2) //GEm: If we'd overlap with price and have enough space
+        Spacing = ((41*DrawScale*2-BlockHeight)/(CardCache[Pool][Card].DescriptionNum+1))/(float)GetConfig(ResolutionY);
+    else
+        Spacing = ((53*DrawScale*2-BlockHeight)/(CardCache[Pool][Card].DescriptionNum+1))/(float)GetConfig(ResolutionY);
+    for (i=0; i<CardCache[Pool][Card].DescriptionNum; i++)
+    {
+        ItemPosition.x = 0; ItemPosition.w = CardCache[Pool][Card].DescriptionTextures[i].TextureSize.X;
+        ItemPosition.y = 0; ItemPosition.h = CardCache[Pool][Card].DescriptionTextures[i].TextureSize.Y;
+        ScreenPosition.Y += Spacing;
+        TextureSize.X = CardCache[Pool][Card].DescriptionTextures[i].TextureSize.X/(float)GetConfig(ResolutionX); TextureSize.Y = CardCache[Pool][Card].DescriptionTextures[i].TextureSize.Y/(float)GetConfig(ResolutionY);
+        ScreenPosition = CentreOnX(ScreenPosition, TextureSize, BoundingBox);
+        DrawTextureAlpha(CardCache[Pool][Card].DescriptionTextures[i].Texture, CardCache[Pool][Card].DescriptionTextures[i].TextureSize, ItemPosition, ScreenPosition, DrawScale*2, Alpha);
+        ScreenPosition.X = X + 4/(float)GetConfig(ResolutionX); //GEm: Reset X, keep Y.
+    }
+    
+    //GEm: Draw card cost.
+    BoundingBox.X = 19/(float)GetConfig(ResolutionX); BoundingBox.Y = 12/(float)GetConfig(ResolutionY);
+    ScreenPosition.X = X + 77/(float)GetConfig(ResolutionX); ScreenPosition.Y = Y + 111/(float)GetConfig(ResolutionY);
+    switch (Colour)
+    {
+        case CT_Blue:
+            ItemPosition.x = 0; ItemPosition.w = CardCache[Pool][Card].PriceTexture[1].TextureSize.X;
+            ItemPosition.y = 0; ItemPosition.h = CardCache[Pool][Card].PriceTexture[1].TextureSize.Y;
+            TextureSize.X = CardCache[Pool][Card].PriceTexture[1].TextureSize.X/(float)GetConfig(ResolutionX); TextureSize.Y = CardCache[Pool][Card].PriceTexture[1].TextureSize.Y/(float)GetConfig(ResolutionY);
+            ScreenPosition = CentreOnX(ScreenPosition, TextureSize, BoundingBox);
+            DrawTextureAlpha(CardCache[Pool][Card].PriceTexture[1].Texture, CardCache[Pool][Card].PriceTexture[1].TextureSize, ItemPosition, ScreenPosition, DrawScale*2, Alpha);
+            break;
+        case CT_Green:
+            ItemPosition.x = 0; ItemPosition.w = CardCache[Pool][Card].PriceTexture[2].TextureSize.X;
+            ItemPosition.y = 0; ItemPosition.h = CardCache[Pool][Card].PriceTexture[2].TextureSize.Y;
+            TextureSize.X = CardCache[Pool][Card].PriceTexture[2].TextureSize.X/(float)GetConfig(ResolutionX); TextureSize.Y = CardCache[Pool][Card].PriceTexture[2].TextureSize.Y/(float)GetConfig(ResolutionY);
+            ScreenPosition = CentreOnX(ScreenPosition, TextureSize, BoundingBox);
+            DrawTextureAlpha(CardCache[Pool][Card].PriceTexture[2].Texture, CardCache[Pool][Card].PriceTexture[2].TextureSize, ItemPosition, ScreenPosition, DrawScale*2, Alpha);
+            break;
+        case CT_White:
+            FatalError("FIXME: White cards not yet supported!");
+            break;
+        default: //GEm: Black and red cards, and anything else strange goes here.
+            ItemPosition.x = 0; ItemPosition.w = CardCache[Pool][Card].PriceTexture[0].TextureSize.X;
+            ItemPosition.y = 0; ItemPosition.h = CardCache[Pool][Card].PriceTexture[0].TextureSize.Y;
+            TextureSize.X = CardCache[Pool][Card].PriceTexture[0].TextureSize.X/(float)GetConfig(ResolutionX); TextureSize.Y = CardCache[Pool][Card].PriceTexture[0].TextureSize.Y/(float)GetConfig(ResolutionY);
+            ScreenPosition = CentreOnX(ScreenPosition, TextureSize, BoundingBox);
+            DrawTextureAlpha(CardCache[Pool][Card].PriceTexture[0].Texture, CardCache[Pool][Card].PriceTexture[0].TextureSize, ItemPosition, ScreenPosition, DrawScale*2, Alpha);
+            break;
+    }
     
 	/*SDL_Rect recta,rectb;
 	int RawX, RawY;

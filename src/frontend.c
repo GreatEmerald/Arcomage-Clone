@@ -78,6 +78,7 @@ int main(int argc,char *argv[])
         case START:
             SetPlayerInfo(Turn, "Player", 0); //GE: Set up a player VS AI game.
             SetPlayerInfo(GetEnemy(), "AI", 1);//Player[GetEnemy()].AI = 1;
+            PrecacheCards();
             
             ClearScreen();
             DrawBackground();

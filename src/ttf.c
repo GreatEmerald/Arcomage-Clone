@@ -24,7 +24,7 @@ struct S_CardDescriptions
     int*** NumWords;
 };
 
-TTF_Font* CurrentFont; //GE: The font that is currently loaded. Only one right now.
+TTF_Font* Fonts[Font_Count]; //GE: Array of fonts in use.
 GLuint** FontCache; //GE: An array of textures for quick rendering. Must match the CardDB[][] in D!
 struct S_CardDescriptions CardDescriptions;
 
@@ -40,8 +40,9 @@ void InitTTF()
     
     CardDescriptions.Text = GetCardDescriptionWords(&(CardDescriptions.NumPools), &(CardDescriptions.NumSentences), &(CardDescriptions.NumLines), &(CardDescriptions.NumWords));
     
-    CurrentFont = TTF_OpenFont(GetFilePath("fonts/FreeSans.ttf"), FindOptimalFontSize()); //GE: Make sure D is initialised first here.
-    if (CurrentFont == NULL)
+    Fonts[Font_Description] = TTF_OpenFont(GetFilePath("fonts/FreeSans.ttf"), FindOptimalFontSize()); //GE: Make sure D is initialised first here.
+    Fonts[Font_Title] = TTF_OpenFont(GetFilePath("fonts/FreeSans.ttf"), (int)(GetDrawScale()*2*10));
+    if (Fonts[Font_Description] == NULL)
         FatalError(TTF_GetError());
     
     //GE: <insert card precaching here>
@@ -71,7 +72,7 @@ void InitTTF()
 
 void QuitTTF()
 {
-    TTF_CloseFont(CurrentFont);
+    TTF_CloseFont(Fonts[Font_Description]);
     TTF_Quit();
 }
 
@@ -81,36 +82,20 @@ void QuitTTF()
  */ 
 void DrawTextLine(char* text, SizeF location)
 {
-
-	SDL_Surface *initial;
 	SDL_Rect rect = {0, 0, 0, 0};
 	int w,h;
 	GLuint texture;
-    SDL_Color color = {0, 0, 0};
     Size TextureSize;
 
-	/* Use SDL_TTF to render our text */
-	initial = TTF_RenderText_Blended(CurrentFont, text, color);
-
-	/* Tell GL about our new texture */
-    texture = SurfaceToTexture(initial);
+    texture = TextToTexture(Fonts[Font_Description], text);
     
-    TTF_SizeText(CurrentFont, text, &w, &h);
+    TTF_SizeText(Fonts[Font_Description], text, &w, &h);
     rect.w = w; rect.h = h;
     TextureSize.X = w; TextureSize.Y= h;
     DrawTexture(texture, TextureSize, rect, location, 1.0);
 
 	/* Clean up */
-	SDL_FreeSurface(initial);
 	glDeleteTextures(1, &texture);
-}
-
-void DrawTextCentred(char* Text, SizeF Destination, SizeF BoundingBox)
-{
-    int TextWidth;
-    TTF_SizeText(CurrentFont, text, &TextWidth, NULL);
-    Destination.X += (Destination.X - TextWidth/(float)GetConfig(ResolutionX))/2.0
-    DrawTextLine(Text, Destination);
 }
 
 /**
@@ -203,12 +188,29 @@ void PrecacheFonts()
     PrecachePriceText();
 }
 
+void PrecacheTitleText()
+{
+    char*** CardTitles = GetCardTitleWords();
+    int Pool, Card;
+    
+    for (Pool = 0; Pool < CardDescriptions.NumPools; Pool++)
+    {
+        for (Card = 0; Card < CardDescriptions.NumSentences[Pool]; Card++)
+        {
+            CardCache[Pool][Card].TitleTexture.Texture = TextToTexture(Fonts[Font_Title], CardTitles[Pool][Card]);
+            TTF_SizeText(Fonts[Font_Title], CardTitles[Pool][Card], &(CardCache[Pool][Card].TitleTexture.TextureSize.X), &(CardCache[Pool][Card].TitleTexture.TextureSize.Y));
+        }
+        free(CardTitles[Pool]);
+    }
+    free(CardTitles);
+}
+
 void PrecacheDescriptionText()
 {
     Size CardSize = {(int)(GetDrawScale()*2*88), (int)(GetDrawScale()*2*53)};
     int Pool, Sentence, Line, Word;
     int SpaceLength;
-    int LineHeight; TTF_SizeText(CurrentFont, " ", &SpaceLength, &LineHeight);
+    int LineHeight; TTF_SizeText(Fonts[Font_Description], " ", &SpaceLength, &LineHeight);
     int WordLength, LineLength;
     int LastLineEnd;
     int i;
@@ -219,16 +221,16 @@ void PrecacheDescriptionText()
     
     for (Pool = 0; Pool < CardDescriptions.NumPools; Pool++)
     {
-        for (Sentence = 0; Sentence < CardDescriptions.NumSentences; Sentence++)
+        for (Sentence = 0; Sentence < CardDescriptions.NumSentences[Pool]; Sentence++)
         {
-            for (Line = 0; Sentence < CardDescriptions.NumLines; Line++)
+            for (Line = 0; Sentence < CardDescriptions.NumLines[Pool][Sentence]; Line++)
             {
                 LineLength = 0;
                 LastLineEnd = 0;
                 
-                for (Word = 0; Word < NumWords[Sentence]; Word++)
+                for (Word = 0; Word < CardDescriptions.NumWords[Pool][Sentence][Line]; Word++)
                 {
-                    TTF_SizeText(CurrentFont, CardDescriptions.Text[Pool][Sentence][Line][Word], &WordLength, NULL); //GE: Set the current word length.
+                    TTF_SizeText(Fonts[Font_Description], CardDescriptions.Text[Pool][Sentence][Line][Word], &WordLength, NULL); //GE: Set the current word length.
                     
                     if ((LineLength == 0 && LineLength + WordLength > CardSize.X)
                     ||(LineLength > 0 && LineLength + SpaceLength + WordLength > CardSize.X)) //GE: Next word won't fit.
@@ -243,8 +245,8 @@ void PrecacheDescriptionText()
                             strcat(CurrentLine, " ");
                             strcat(CurrentLine, CardDescriptions.Text[Pool][Sentence][Line][i]);
                         }
-                        CurrentTexture = TextToTexture(CurrentFont, CurrentLine);
-                        TTF_SizeText(CurrentFont, CurrentLine, &(TextureSize.X), &(TextureSize.Y));
+                        CurrentTexture = TextToTexture(Fonts[Font_Description], CurrentLine);
+                        TTF_SizeText(Fonts[Font_Description], CurrentLine, &(TextureSize.X), &(TextureSize.Y));
                         free(CurrentLine);
                         
                         CardCache[Pool][Sentence].DescriptionNum++;
@@ -261,6 +263,59 @@ void PrecacheDescriptionText()
                     else
                         LineLength += SpaceLength + WordLength;
                 }
+            }
+        }
+    }
+}
+
+void PrecachePriceText()
+{
+    int Pool, Card, BrickCost, GemCost, RecruitCost;
+    //char* ReadableNumber = (char*) malloc(4*sizeof(char)); //GE: Prices should never go over 999
+    char ReadableNumber[4];
+    GLuint ZeroTexture = TextToTexture(Fonts[Font_Title], "0"); //GE: Small optimisation - 0 is very common, so use a common texture for that
+    Size ZeroSize; TTF_SizeText(Fonts[Font_Title], "0", &(ZeroSize.X), &(ZeroSize.Y));
+    
+    for (Pool = 0; Pool < CardDescriptions.NumPools; Pool++)
+    {
+        for (Card = 0; Card < CardDescriptions.NumSentences[Pool]; Card++)
+        {
+            GetCardPrice(Pool, Card, &BrickCost, &GemCost, &RecruitCost);
+            
+            if (BrickCost)
+            {
+                sprintf(ReadableNumber, "%d", BrickCost); //GE: Convert int to char*
+                CardCache[Pool][Card].PriceTexture[0].Texture = TextToTexture(Fonts[Font_Title], ReadableNumber);
+                TTF_SizeText(Fonts[Font_Title], ReadableNumber, &(CardCache[Pool][Card].PriceTexture[0].TextureSize.X), &(CardCache[Pool][Card].PriceTexture[0].TextureSize.Y));
+            }
+            else
+            {
+                CardCache[Pool][Card].PriceTexture[0].Texture = ZeroTexture;
+                CardCache[Pool][Card].PriceTexture[0].TextureSize = ZeroSize;
+            }
+            
+            if (GemCost)
+            {
+                sprintf(ReadableNumber, "%d", GemCost);
+                CardCache[Pool][Card].PriceTexture[1].Texture = TextToTexture(Fonts[Font_Title], ReadableNumber);
+                TTF_SizeText(Fonts[Font_Title], ReadableNumber, &(CardCache[Pool][Card].PriceTexture[1].TextureSize.X), &(CardCache[Pool][Card].PriceTexture[1].TextureSize.Y));
+            }
+            else
+            {
+                CardCache[Pool][Card].PriceTexture[1].Texture = ZeroTexture;
+                CardCache[Pool][Card].PriceTexture[1].TextureSize = ZeroSize;
+            }
+            
+            if (RecruitCost)
+            {
+                sprintf(ReadableNumber, "%d", RecruitCost);
+                CardCache[Pool][Card].PriceTexture[2].Texture = TextToTexture(Fonts[Font_Title], ReadableNumber);
+                TTF_SizeText(Fonts[Font_Title], ReadableNumber, &(CardCache[Pool][Card].PriceTexture[2].TextureSize.X), &(CardCache[Pool][Card].PriceTexture[2].TextureSize.Y));
+            }
+            else
+            {
+                CardCache[Pool][Card].PriceTexture[2].Texture = ZeroTexture;
+                CardCache[Pool][Card].PriceTexture[2].TextureSize = ZeroSize;
             }
         }
     }
@@ -284,12 +339,37 @@ int nextpoweroftwo(int x)
 	return round(pow(2,ceil(logbase2)));
 }
 
+/**
+ * Find the lower of the two values (type int).
+ */ 
 int Min(int A, int B)
 {
     if (A <= B)
         return A;
     else
         return B;
+}
+
+/**
+ * Convert text string into OpenGL texture. Returns its handle.
+ */ 
+GLuint TextToTexture(TTF_Font* Font, char* Text)
+{
+    SDL_Surface* Initial;
+	GLuint Texture;
+    SDL_Color Colour = {0, 0, 0};
+
+	Initial = TTF_RenderText_Blended(Font, Text, Colour);
+    Texture = SurfaceToTexture(Initial);
+    
+	SDL_FreeSurface(Initial);
+    return Texture;
+}
+
+SizeF CentreOnX(SizeF Destination, SizeF ObjectSize, SizeF BoundingBox)
+{
+    Destination.X += (BoundingBox.X - ObjectSize.X)/2.0;
+    return Destination;
 }
 
 /**

@@ -2,6 +2,7 @@
 #define _GRAPHICS_ 1
 
 #include <SDL.h>
+#include <SDL_opengl.h>
 
 enum {
 		/*SCREEN=0,
@@ -57,6 +58,7 @@ typedef struct S_CachedCard
 {
     OpenGLTexture TitleTexture;
     OpenGLTexture PictureTexture;
+    SDL_Rect PictureCoords;
     OpenGLTexture* DescriptionTextures;
     int DescriptionNum;
     OpenGLTexture PriceTexture[3]; //GE: Bricks, gems, recruits
@@ -64,6 +66,7 @@ typedef struct S_CachedCard
 
 CachedCard** CardCache;
 
+void PrecacheCards();
 void PrecacheCard(const char* File, size_t Size);
 
 void Graphics_Init();
