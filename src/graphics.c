@@ -315,24 +315,25 @@ void DrawCardAlpha(char Player, char Number, float X, float Y, float Alpha)
     TextureSize.X = CardCache[Pool][Card].TitleTexture.TextureSize.X/(float)GetConfig(ResolutionX); TextureSize.Y = CardCache[Pool][Card].TitleTexture.TextureSize.Y/(float)GetConfig(ResolutionY);
     ScreenPosition = CentreOnX(ScreenPosition, TextureSize, BoundingBox);
     
-    DrawTextureAlpha(CardCache[Pool][Card].TitleTexture.Texture, CardCache[Pool][Card].TitleTexture.TextureSize, ItemPosition, ScreenPosition, DrawScale*2, Alpha);
+    DrawTextureAlpha(CardCache[Pool][Card].TitleTexture.Texture, CardCache[Pool][Card].TitleTexture.TextureSize, ItemPosition, ScreenPosition, 1.0, Alpha);
     
     //GEm: Draw description text.
     ScreenPosition.X = X + 4/(float)GetConfig(ResolutionX); ScreenPosition.Y = Y + 72/(float)GetConfig(ResolutionY);
     for (i=0; i<CardCache[Pool][Card].DescriptionNum; i++)
         BlockHeight += CardCache[Pool][Card].DescriptionTextures[i].TextureSize.Y; //GEm: Alternatively, I could just multiply one by DescriptionNum, but four iterations are not much.
-    if (BlockHeight <= 41*DrawScale*2 && CardCache[Pool][Card].DescriptionTextures[CardCache[Pool][Card].DescriptionNum].TextureSize.X > 66*DrawScale*2) //GEm: If we'd overlap with price and have enough space
+    if (CardCache[Pool][Card].DescriptionTextures[CardCache[Pool][Card].DescriptionNum].TextureSize.X > 66*DrawScale*2 && CardCache[Pool][Card].DescriptionNum > 1 && BlockHeight <= 41*DrawScale*2) //GEm: If we'd overlap with price and have enough space
         Spacing = ((41*DrawScale*2-BlockHeight)/(CardCache[Pool][Card].DescriptionNum+1))/(float)GetConfig(ResolutionY);
     else
         Spacing = ((53*DrawScale*2-BlockHeight)/(CardCache[Pool][Card].DescriptionNum+1))/(float)GetConfig(ResolutionY);
+    ScreenPosition.Y += Spacing;
     for (i=0; i<CardCache[Pool][Card].DescriptionNum; i++)
     {
         ItemPosition.x = 0; ItemPosition.w = CardCache[Pool][Card].DescriptionTextures[i].TextureSize.X;
         ItemPosition.y = 0; ItemPosition.h = CardCache[Pool][Card].DescriptionTextures[i].TextureSize.Y;
-        ScreenPosition.Y += Spacing;
         TextureSize.X = CardCache[Pool][Card].DescriptionTextures[i].TextureSize.X/(float)GetConfig(ResolutionX); TextureSize.Y = CardCache[Pool][Card].DescriptionTextures[i].TextureSize.Y/(float)GetConfig(ResolutionY);
         ScreenPosition = CentreOnX(ScreenPosition, TextureSize, BoundingBox);
-        DrawTextureAlpha(CardCache[Pool][Card].DescriptionTextures[i].Texture, CardCache[Pool][Card].DescriptionTextures[i].TextureSize, ItemPosition, ScreenPosition, DrawScale*2, Alpha);
+        DrawTextureAlpha(CardCache[Pool][Card].DescriptionTextures[i].Texture, CardCache[Pool][Card].DescriptionTextures[i].TextureSize, ItemPosition, ScreenPosition, 1.0, Alpha);
+        ScreenPosition.Y += Spacing + CardCache[Pool][Card].DescriptionTextures[i].TextureSize.Y/(float)GetConfig(ResolutionY);
         ScreenPosition.X = X + 4/(float)GetConfig(ResolutionX); //GEm: Reset X, keep Y.
     }
     
@@ -346,14 +347,14 @@ void DrawCardAlpha(char Player, char Number, float X, float Y, float Alpha)
             ItemPosition.y = 0; ItemPosition.h = CardCache[Pool][Card].PriceTexture[1].TextureSize.Y;
             TextureSize.X = CardCache[Pool][Card].PriceTexture[1].TextureSize.X/(float)GetConfig(ResolutionX); TextureSize.Y = CardCache[Pool][Card].PriceTexture[1].TextureSize.Y/(float)GetConfig(ResolutionY);
             ScreenPosition = CentreOnX(ScreenPosition, TextureSize, BoundingBox);
-            DrawTextureAlpha(CardCache[Pool][Card].PriceTexture[1].Texture, CardCache[Pool][Card].PriceTexture[1].TextureSize, ItemPosition, ScreenPosition, DrawScale*2, Alpha);
+            DrawTextureAlpha(CardCache[Pool][Card].PriceTexture[1].Texture, CardCache[Pool][Card].PriceTexture[1].TextureSize, ItemPosition, ScreenPosition, 1.0, Alpha);
             break;
         case CT_Green:
             ItemPosition.x = 0; ItemPosition.w = CardCache[Pool][Card].PriceTexture[2].TextureSize.X;
             ItemPosition.y = 0; ItemPosition.h = CardCache[Pool][Card].PriceTexture[2].TextureSize.Y;
             TextureSize.X = CardCache[Pool][Card].PriceTexture[2].TextureSize.X/(float)GetConfig(ResolutionX); TextureSize.Y = CardCache[Pool][Card].PriceTexture[2].TextureSize.Y/(float)GetConfig(ResolutionY);
             ScreenPosition = CentreOnX(ScreenPosition, TextureSize, BoundingBox);
-            DrawTextureAlpha(CardCache[Pool][Card].PriceTexture[2].Texture, CardCache[Pool][Card].PriceTexture[2].TextureSize, ItemPosition, ScreenPosition, DrawScale*2, Alpha);
+            DrawTextureAlpha(CardCache[Pool][Card].PriceTexture[2].Texture, CardCache[Pool][Card].PriceTexture[2].TextureSize, ItemPosition, ScreenPosition, 1.0, Alpha);
             break;
         case CT_White:
             FatalError("FIXME: White cards not yet supported!");
@@ -363,7 +364,7 @@ void DrawCardAlpha(char Player, char Number, float X, float Y, float Alpha)
             ItemPosition.y = 0; ItemPosition.h = CardCache[Pool][Card].PriceTexture[0].TextureSize.Y;
             TextureSize.X = CardCache[Pool][Card].PriceTexture[0].TextureSize.X/(float)GetConfig(ResolutionX); TextureSize.Y = CardCache[Pool][Card].PriceTexture[0].TextureSize.Y/(float)GetConfig(ResolutionY);
             ScreenPosition = CentreOnX(ScreenPosition, TextureSize, BoundingBox);
-            DrawTextureAlpha(CardCache[Pool][Card].PriceTexture[0].Texture, CardCache[Pool][Card].PriceTexture[0].TextureSize, ItemPosition, ScreenPosition, DrawScale*2, Alpha);
+            DrawTextureAlpha(CardCache[Pool][Card].PriceTexture[0].Texture, CardCache[Pool][Card].PriceTexture[0].TextureSize, ItemPosition, ScreenPosition, 1.0, Alpha);
             break;
     }
     
@@ -406,7 +407,7 @@ void DrawCardAlpha(char Player, char Number, float X, float Y, float Alpha)
 
 inline void DrawCard(char Player, char Number, float X, float Y)
 {
-	DrawCardAlpha(Player, Number, X, Y, 0.0);
+	DrawCardAlpha(Player, Number, X, Y, 1.0);
 }
 
 void DrawFoldedAlpha(int Team, float X, float Y, float Alpha)
@@ -425,7 +426,7 @@ void DrawFoldedAlpha(int Team, float X, float Y, float Alpha)
 
 inline void DrawFolded(int Team, float X, float Y)
 {
-    DrawFoldedAlpha(Team, X, Y, 0.0);
+    DrawFoldedAlpha(Team, X, Y, 1.0);
 }
 
 void DrawDiscard(int X, int Y)

@@ -23,7 +23,7 @@ void InitOpenGL()
     glViewport( 0, 0, GetConfig(ResolutionX), GetConfig(ResolutionY) ); //Set the size of the window. 
      
     glClear( GL_COLOR_BUFFER_BIT ); //Clear the screen.
-     
+    
     glMatrixMode( GL_PROJECTION ); //Set the output to be a projection (2D plane).
     glLoadIdentity();
      
@@ -68,6 +68,8 @@ GLuint SurfaceToTexture(SDL_Surface* surface)
     // Set the texture's stretching properties
         glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR );
         glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR );
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
  
     // Edit the texture object's image data using the information SDL_Surface gives us
     glTexImage2D( GL_TEXTURE_2D, 0, nOfColors, surface->w, surface->h, 0,
@@ -101,6 +103,10 @@ void DrawTextureAlpha(GLuint Texture, Size TexSize, SDL_Rect SourceCoords, SizeF
     if (!glIsTexture(Texture))
         printf("Warning: DrawTexture: This texture is not a valid OpenGL texture!\n");
     //printf("Info: DrawTexture: Called with (%d, {%d, %d}, {%d, %d, %d, %d}, {%f, %f}, %f)\n", Texture, TexSize.X, TexSize.Y, SourceCoords.x, SourceCoords.y, SourceCoords.w, SourceCoords.h, DestinationCoords.X, DestinationCoords.Y, ScaleFactor);
+    
+    //GEm: Normalise destination coordinates (drop half-pixels)
+    DestinationCoords.X = ((int)(DestinationCoords.X*ResX))/(float)ResX;
+    DestinationCoords.Y = ((int)(DestinationCoords.Y*ResY))/(float)ResY;
     
     // Bind the texture to which subsequent calls refer to
     glBindTexture( GL_TEXTURE_2D, Texture );

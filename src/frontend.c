@@ -78,7 +78,6 @@ int main(int argc,char *argv[])
         case START:
             SetPlayerInfo(Turn, "Player", 0); //GE: Set up a player VS AI game.
             SetPlayerInfo(GetEnemy(), "AI", 1);//Player[GetEnemy()].AI = 1;
-            PrecacheCards();
             
             ClearScreen();
             DrawBackground();
@@ -87,7 +86,7 @@ int main(int argc,char *argv[])
             for (n=0; n<2; n++)
                 for (i=0; i<GetConfig(CardsInHand); i++)
                     DrawCard(n, i, 1.0/GetConfig(CardsInHand)*i, 0.77*n);
-            DrawTextLine("This is a test string!", TestLocation);
+            //DrawTextLine("This is a test string!", TestLocation);
             UpdateScreen();
             getchar();
             //Player[Turn].Name = "Player";

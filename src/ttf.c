@@ -41,11 +41,13 @@ void InitTTF()
     CardDescriptions.Text = GetCardDescriptionWords(&(CardDescriptions.NumPools), &(CardDescriptions.NumSentences), &(CardDescriptions.NumLines), &(CardDescriptions.NumWords));
     
     Fonts[Font_Description] = TTF_OpenFont(GetFilePath("fonts/FreeSans.ttf"), FindOptimalFontSize()); //GE: Make sure D is initialised first here.
+    TTF_SetFontHinting(Fonts[Font_Description], TTF_HINTING_NORMAL);
     Fonts[Font_Title] = TTF_OpenFont(GetFilePath("fonts/FreeSans.ttf"), (int)(GetDrawScale()*2*10));
     if (Fonts[Font_Description] == NULL)
         FatalError(TTF_GetError());
     
-    //GE: <insert card precaching here>
+    PrecacheCards();
+    
     //GE: Deallocate the card descriptions, since we initialised them in this function as well.
     for (a=0; a<CardDescriptions.NumPools; a++)
     {
@@ -214,7 +216,7 @@ void PrecacheDescriptionText()
     int WordLength, LineLength;
     int LastLineEnd;
     int i;
-    int TextSize;
+    int TextSize = 0;
     char* CurrentLine;
     GLuint CurrentTexture;
     Size TextureSize;
@@ -223,7 +225,7 @@ void PrecacheDescriptionText()
     {
         for (Sentence = 0; Sentence < CardDescriptions.NumSentences[Pool]; Sentence++)
         {
-            for (Line = 0; Sentence < CardDescriptions.NumLines[Pool][Sentence]; Line++)
+            for (Line = 0; Line < CardDescriptions.NumLines[Pool][Sentence]; Line++)
             {
                 LineLength = 0;
                 LastLineEnd = 0;
@@ -233,14 +235,19 @@ void PrecacheDescriptionText()
                     TTF_SizeText(Fonts[Font_Description], CardDescriptions.Text[Pool][Sentence][Line][Word], &WordLength, NULL); //GE: Set the current word length.
                     
                     if ((LineLength == 0 && LineLength + WordLength > CardSize.X)
-                    ||(LineLength > 0 && LineLength + SpaceLength + WordLength > CardSize.X)) //GE: Next word won't fit.
+                    ||(LineLength > 0 && LineLength + SpaceLength + WordLength > CardSize.X) //GEm: Next word won't fit,
+                    ||(Word+1 == CardDescriptions.NumWords[Pool][Sentence][Line])) //GEm: or there are no more words left
                     {
                         //GE: This line is full, write to cache.
-                        for (i=0; i < Word-LastLineEnd; i++)
+                        for (i=0; i < Word+1-LastLineEnd; i++)
+                        {
                             TextSize += strlen(CardDescriptions.Text[Pool][Sentence][Line][i]);
-                        CurrentLine = (char*) malloc((TextSize+1)*sizeof(char));
+                            if (i > 0)
+                                TextSize++;
+                        }
+                        CurrentLine = (char*) malloc((TextSize+1)*sizeof(char)); TextSize = 0;
                         strcpy(CurrentLine, CardDescriptions.Text[Pool][Sentence][Line][0]);
-                        for (i=1; i < Word-LastLineEnd; i++)
+                        for (i=1; i < Word+1-LastLineEnd; i++)
                         {
                             strcat(CurrentLine, " ");
                             strcat(CurrentLine, CardDescriptions.Text[Pool][Sentence][Line][i]);
