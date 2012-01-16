@@ -25,8 +25,10 @@ struct S_CardDescriptions
 };
 
 TTF_Font* Fonts[Font_Count]; //GE: Array of fonts in use.
+TTF_Font* NumberFonts[Numbers_Count]; //GE: Array of fonts that render numbers in use.
 GLuint** FontCache; //GE: An array of textures for quick rendering. Must match the CardDB[][] in D!
 struct S_CardDescriptions CardDescriptions;
+OpenGLTexture[Numbers_Count][10] NumberCache;
 
 /**
  * A shortened initialisation function for TTF.
@@ -41,10 +43,14 @@ void InitTTF()
     CardDescriptions.Text = GetCardDescriptionWords(&(CardDescriptions.NumPools), &(CardDescriptions.NumSentences), &(CardDescriptions.NumLines), &(CardDescriptions.NumWords));
     
     Fonts[Font_Description] = TTF_OpenFont(GetFilePath("fonts/FreeSans.ttf"), FindOptimalFontSize()); //GE: Make sure D is initialised first here.
-    TTF_SetFontHinting(Fonts[Font_Description], TTF_HINTING_NORMAL);
+    //TTF_SetFontHinting(Fonts[Font_Description], TTF_HINTING_NORMAL);
     Fonts[Font_Title] = TTF_OpenFont(GetFilePath("fonts/FreeSans.ttf"), (int)(GetDrawScale()*2*10));
     if (Fonts[Font_Description] == NULL)
         FatalError(TTF_GetError());
+    
+    NumberFonts[Numbers_Big] = TTF_OpenFont(GetFilePath("fonts/FreeMonoBold.ttf"), (int)(GetDrawScale()*2*17));
+    NumberFonts[Numbers_Medium] = TTF_OpenFont(GetFilePath("fonts/FreeMonoBold.ttf"), (int)(GetDrawScale()*2*10));
+    NumberFonts[Numbers_Small] = TTF_OpenFont(GetFilePath("fonts/FreeMono.ttf"), (int)(GetDrawScale()*2*7));
     
     PrecacheCards();
     
@@ -188,6 +194,7 @@ void PrecacheFonts()
     PrecacheTitleText();
     PrecacheDescriptionText();
     PrecachePriceText();
+    PrecacheNumbers();
 }
 
 void PrecacheTitleText()
@@ -324,6 +331,20 @@ void PrecachePriceText()
                 CardCache[Pool][Card].PriceTexture[2].Texture = ZeroTexture;
                 CardCache[Pool][Card].PriceTexture[2].TextureSize = ZeroSize;
             }
+        }
+    }
+}
+
+void PrecacheNumbers()
+{
+    int i, n;
+    
+    for (n=0; n<Numbers_Count; n++)
+    {
+        for (i=0; i<10; i++) //GEm: Numbers match their positions, NC[0]=0, NC[9]=9
+        {
+            NumberCache[n][i].Texture = TextToTexture(NumberFonts[n], '0'+i); //GEm: Using addition to 0 is faster and easier than sprintf, when using only one char
+            TTF_SizeText(NumberFonts[n], '0'+i, &(NumberCache[n][i].TextureSize.X), &(NumberCache[n][i].TextureSize.Y)); //GEm: We are the knights who say NI!
         }
     }
 }

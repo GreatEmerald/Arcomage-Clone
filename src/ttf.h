@@ -10,6 +10,14 @@ enum
     Font_Count
 };
 
+enum
+{
+    Numbers_Big = 0,
+    Numbers_Medium,
+    Numbers_Small,
+    Numbers_Count
+};
+
 void InitTTF();
 void QuitTTF();
 void DrawTextLine(char* text, SizeF location);
@@ -18,6 +26,7 @@ void PrecacheFonts();
 void PrecacheTitleText();
 void PrecacheDescriptionText();
 void PrecachePriceText();
+void PrecacheNumbers();
 //int round(double x);
 int nextpoweroftwo(int x);
 int Min(int A, int B);
