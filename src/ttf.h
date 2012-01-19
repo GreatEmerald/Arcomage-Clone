@@ -7,6 +7,7 @@ enum
 {
     Font_Title = 0,
     Font_Description,
+    Font_Name, //GEm: This is the font for the player's name.
     Font_Count
 };
 

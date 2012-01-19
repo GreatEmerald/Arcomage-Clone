@@ -29,6 +29,7 @@ TTF_Font* NumberFonts[Numbers_Count]; //GE: Array of fonts that render numbers i
 GLuint** FontCache; //GE: An array of textures for quick rendering. Must match the CardDB[][] in D!
 struct S_CardDescriptions CardDescriptions;
 OpenGLTexture[Numbers_Count][10] NumberCache;
+OpenGLTexture[2] NameCache; //GEm: FIXME - needs to be dynamic
 
 /**
  * A shortened initialisation function for TTF.
@@ -45,6 +46,7 @@ void InitTTF()
     Fonts[Font_Description] = TTF_OpenFont(GetFilePath("fonts/FreeSans.ttf"), FindOptimalFontSize()); //GE: Make sure D is initialised first here.
     //TTF_SetFontHinting(Fonts[Font_Description], TTF_HINTING_NORMAL);
     Fonts[Font_Title] = TTF_OpenFont(GetFilePath("fonts/FreeSans.ttf"), (int)(GetDrawScale()*2*10));
+    Fonts[Font_Name] = TTF_OpenFont(GetFilePath("fonts/FreeMonoBold.ttf"), (int)(GetDrawScale()*2*7));
     if (Fonts[Font_Description] == NULL)
         FatalError(TTF_GetError());
     
@@ -195,6 +197,7 @@ void PrecacheFonts()
     PrecacheDescriptionText();
     PrecachePriceText();
     PrecacheNumbers();
+    PrecachePlayerNames();
 }
 
 void PrecacheTitleText()
@@ -338,14 +341,28 @@ void PrecachePriceText()
 void PrecacheNumbers()
 {
     int i, n;
+    char[2] ReadableNumber; //GEm: Has to be a string, even if it's a single char - needs \0
     
     for (n=0; n<Numbers_Count; n++)
     {
         for (i=0; i<10; i++) //GEm: Numbers match their positions, NC[0]=0, NC[9]=9
         {
-            NumberCache[n][i].Texture = TextToTexture(NumberFonts[n], '0'+i); //GEm: Using addition to 0 is faster and easier than sprintf, when using only one char
-            TTF_SizeText(NumberFonts[n], '0'+i, &(NumberCache[n][i].TextureSize.X), &(NumberCache[n][i].TextureSize.Y)); //GEm: We are the knights who say NI!
+            sprintf(ReadableNumber, "%d", i);
+            NumberCache[n][i].Texture = TextToTexture(NumberFonts[n], ReadableNumber); //GEm: Using addition to 0 is faster and easier than sprintf, when using only one char
+            TTF_SizeText(NumberFonts[n], ReadableNumber, &(NumberCache[n][i].TextureSize.X), &(NumberCache[n][i].TextureSize.Y)); //GEm: We are the knights who say NI!
         }
+    }
+}
+
+void PrecachePlayerNames()
+{
+    int NumPlayers = 2; //GEm: TODO implement variable amount of players!
+    int i;
+    
+    for (i=0; i<NumPlayers; i++)
+    {
+        NameCache[i].Texture = TextToTexture(Fonts[Font_Name], GetPlayerName(i));
+        TTF_SizeText(Fonts[Font_Name], GetPlayerName(i), &(NameCache[i].TextureSize.X), &(NameCache[i].TextureSize.Y));
     }
 }
 
@@ -393,7 +410,13 @@ GLuint TextToTexture(TTF_Font* Font, char* Text)
 	SDL_FreeSurface(Initial);
     return Texture;
 }
-
+/**
+ * Centre a box in another box. Ignores Y.
+ * Parameters:
+ * Destination - The (top) left edge of the bounding box.
+ * ObjectSize - The length of the texture you wish to draw.
+ * BoundingBox - The size of the bounding box you want to fit things in.
+ */ 
 SizeF CentreOnX(SizeF Destination, SizeF ObjectSize, SizeF BoundingBox)
 {
     Destination.X += (BoundingBox.X - ObjectSize.X)/2.0;

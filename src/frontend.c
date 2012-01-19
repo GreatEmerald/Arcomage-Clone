@@ -83,6 +83,7 @@ int main(int argc,char *argv[])
             DrawBackground();
             DrawFoldedAlpha(0, 120.0/800.0, 166.0/600.0, (float)GetConfig(CardTranslucency)/255.0);
             DrawUI();
+            DrawStatus();
             for (n=0; n<2; n++)
                 for (i=0; i<GetConfig(CardsInHand); i++)
                     DrawCard(n, i, 1.0/GetConfig(CardsInHand)*i, 0.77*n);

@@ -540,29 +540,42 @@ void DrawBigNumber(int Resource, int X, int Y)
     //SDL_BlitSurface(GfxData[NUMSBIG],&rectb,GfxData[SCREEN],&recta);//DEBUG
 }
 
-/*void DrawStatus(int turn,struct Stats *Players) //DEBUG
+void DrawStatus(int turn,struct Stats *Players) //DEBUG
 {
-	SDL_Rect recta,rectb;
-	int i,j;
-	char b[4];
-//	print players' names
-	recta.w=70;recta.h=16;recta.y=13+4;
-	if (turn) recta.x=555+4;
-		else recta.x=8+4;
-	SDL_FillRect(GfxData[SCREEN],&recta,SDL_MapRGB(GfxData[SCREEN]->format,(Uint8)(0xC0*!turn),0,(Uint8)(0xC0*turn)));
-	BFont_PutString(GfxData[SCREEN], 15+32-BFont_TextWidth(Players[0].Name)/2,20,Players[0].Name);
-	BFont_PutString(GfxData[SCREEN],562+32-BFont_TextWidth(Players[1].Name)/2,20,Players[1].Name);
-	int Offset[3]={33,43,53};
+    int i;
+    char* Name;
+    SDL_Rect AbsoluteSize;
+    SizeF ScreenPosition, RelativeSize, BoundingBox;
+    
+    //GEm: TODO: implement more than 2 players
+    for (i=0; i<2; i++)
+    {
+        //GEm: Print the name of the players, centred
+        AbsoluteSize.x = 0; AbsoluteSize.w = NameCache[i].TextureSize.X;
+        AbsoluteSize.y = 0; AbsoluteSize.h = NameCache[i].TextureSize.Y;
+        
+        ScreenPosition.X = 11+(706*i)/800.0; ScreenPosition.Y = 170/600.0;
+        RelativeSize.X = NameCache[i].TextureSize.X/(float)GetConfig(ResolutionX);
+        RelativeSize.Y = NameCache[i].TextureSize.Y/(float)GetConfig(ResolutionY);
+        BoundingBox.X = 72/800.0; BoundingBox.Y = 7/600.0;
+        ScreenPosition = CentreOnX(ScreenPosition, RelativeSize, BoundingBox);
+        
+        DrawTexture(NameCache[i].Texture, NameCache[i].TextureSize, AbsoluteSize, ScreenPosition, 1.0);
+        
+        
+        
+    }
+    
     for (i=0;i<2;i++)
 	{
 	    for (j=0;j<3;j++)
 	    {
             DrawSmallNumber((&Players[i].b)[j], 10+i*547, 115+j*72, Offset[j]);
             DrawBigNumber((&Players[i].q)[j], 13+547*i, 91+j*72);
-        }*/
+        }
         
         
-        /*int d1, d2;
+        int d1, d2;
         d1 = Players[i].q/10;
         d2 = Players[i].q%10;
         
@@ -603,29 +616,13 @@ void DrawBigNumber(int Resource, int X, int Y)
 		//	print small numbers (bricks,gems,recruits)
 			//BFont_PutStringFont(GfxData[SCREEN],numssmall,10+i*547,115+j*72,b);
 		//}
-    /*} //DEBUG
+    } //DEBUG
 //	print tower/wall numbers
 	sprintf(b,"%d",Players[0].t);BFont_PutString(GfxData[SCREEN],160-BFont_TextWidth(b)/2,317,b);
 	sprintf(b,"%d",Players[0].w);BFont_PutString(GfxData[SCREEN],242-BFont_TextWidth(b)/2,317,b);
 	sprintf(b,"%d",Players[1].w);BFont_PutString(GfxData[SCREEN],398-BFont_TextWidth(b)/2,317,b);
 	sprintf(b,"%d",Players[1].t);BFont_PutString(GfxData[SCREEN],resY-BFont_TextWidth(b)/2,317,b);
-//	draw left tower
-	rectb.x=0;rectb.y=0;rectb.w=68;rectb.h=292-(200-Players[0].t);
-	recta.x=126;recta.y=16+(200-Players[0].t);recta.w=68;recta.h=292-(200-Players[0].t);
-	SDL_BlitSurface(GfxData[CASTLE],&rectb,GfxData[SCREEN],&recta);
-//	draw right tower
-	rectb.x=68;rectb.y=0;rectb.w=68;rectb.h=292-(200-Players[1].t);
-	recta.x=446;recta.y=16+(200-Players[1].t);recta.w=68;recta.h=292-(200-Players[1].t);
-	SDL_BlitSurface(GfxData[CASTLE],&rectb,GfxData[SCREEN],&recta);
-//	draw left wall
-	rectb.x=68*2;rectb.y=0;rectb.w=68;rectb.h=292-(200-Players[0].w);
-	recta.x=230;recta.y=16+(200-Players[0].w);recta.w=68;recta.h=292-(200-Players[0].w);
-	SDL_BlitSurface(GfxData[CASTLE],&rectb,GfxData[SCREEN],&recta);
-//	draw right wall
-	rectb.x=68*2;rectb.y=0;rectb.w=68;rectb.h=292-(200-Players[1].w);
-	recta.x=386;recta.y=16+(200-Players[1].w);recta.w=68;recta.h=292-(200-Players[1].w);
-	SDL_BlitSurface(GfxData[CASTLE],&rectb,GfxData[SCREEN],&recta);
-}*/
+}
 
 /**
  * Draws the static menu elements and the buttons (all unselected).
