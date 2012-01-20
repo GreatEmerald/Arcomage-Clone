@@ -28,8 +28,6 @@ TTF_Font* Fonts[Font_Count]; //GE: Array of fonts in use.
 TTF_Font* NumberFonts[Numbers_Count]; //GE: Array of fonts that render numbers in use.
 GLuint** FontCache; //GE: An array of textures for quick rendering. Must match the CardDB[][] in D!
 struct S_CardDescriptions CardDescriptions;
-OpenGLTexture[Numbers_Count][10] NumberCache;
-OpenGLTexture[2] NameCache; //GEm: FIXME - needs to be dynamic
 
 /**
  * A shortened initialisation function for TTF.
@@ -46,13 +44,13 @@ void InitTTF()
     Fonts[Font_Description] = TTF_OpenFont(GetFilePath("fonts/FreeSans.ttf"), FindOptimalFontSize()); //GE: Make sure D is initialised first here.
     //TTF_SetFontHinting(Fonts[Font_Description], TTF_HINTING_NORMAL);
     Fonts[Font_Title] = TTF_OpenFont(GetFilePath("fonts/FreeSans.ttf"), (int)(GetDrawScale()*2*10));
-    Fonts[Font_Name] = TTF_OpenFont(GetFilePath("fonts/FreeMonoBold.ttf"), (int)(GetDrawScale()*2*7));
+    Fonts[Font_Name] = TTF_OpenFont(GetFilePath("fonts/FreeMono.ttf"), (int)(GetDrawScale()*2*11));//7
     if (Fonts[Font_Description] == NULL)
         FatalError(TTF_GetError());
     
-    NumberFonts[Numbers_Big] = TTF_OpenFont(GetFilePath("fonts/FreeMonoBold.ttf"), (int)(GetDrawScale()*2*17));
-    NumberFonts[Numbers_Medium] = TTF_OpenFont(GetFilePath("fonts/FreeMonoBold.ttf"), (int)(GetDrawScale()*2*10));
-    NumberFonts[Numbers_Small] = TTF_OpenFont(GetFilePath("fonts/FreeMono.ttf"), (int)(GetDrawScale()*2*7));
+    NumberFonts[Numbers_Big] = TTF_OpenFont(GetFilePath("fonts/FreeMonoBold.ttf"), (int)(GetDrawScale()*2*27));//17
+    NumberFonts[Numbers_Medium] = TTF_OpenFont(GetFilePath("fonts/FreeMonoBold.ttf"), (int)(GetDrawScale()*2*16));//10
+    NumberFonts[Numbers_Small] = TTF_OpenFont(GetFilePath("fonts/FreeMono.ttf"), (int)(GetDrawScale()*2*11));//7
     
     PrecacheCards();
     
@@ -197,7 +195,7 @@ void PrecacheFonts()
     PrecacheDescriptionText();
     PrecachePriceText();
     PrecacheNumbers();
-    PrecachePlayerNames();
+    //GEm: Make sure you precache player names later on
 }
 
 void PrecacheTitleText()
@@ -341,14 +339,18 @@ void PrecachePriceText()
 void PrecacheNumbers()
 {
     int i, n;
-    char[2] ReadableNumber; //GEm: Has to be a string, even if it's a single char - needs \0
+    char ReadableNumber[2]; //GEm: Has to be a string, even if it's a single char - needs \0
+    SDL_Color Colour = {200, 200, 0};
     
     for (n=0; n<Numbers_Count; n++)
     {
         for (i=0; i<10; i++) //GEm: Numbers match their positions, NC[0]=0, NC[9]=9
         {
             sprintf(ReadableNumber, "%d", i);
-            NumberCache[n][i].Texture = TextToTexture(NumberFonts[n], ReadableNumber); //GEm: Using addition to 0 is faster and easier than sprintf, when using only one char
+            if (n == Numbers_Medium)
+                NumberCache[n][i].Texture = TextToTexture(NumberFonts[n], ReadableNumber);
+            else
+                NumberCache[n][i].Texture = TextToTextureColour(NumberFonts[n], ReadableNumber, Colour);
             TTF_SizeText(NumberFonts[n], ReadableNumber, &(NumberCache[n][i].TextureSize.X), &(NumberCache[n][i].TextureSize.Y)); //GEm: We are the knights who say NI!
         }
     }
@@ -358,10 +360,11 @@ void PrecachePlayerNames()
 {
     int NumPlayers = 2; //GEm: TODO implement variable amount of players!
     int i;
+    SDL_Color Colour = {200, 200, 0};
     
     for (i=0; i<NumPlayers; i++)
     {
-        NameCache[i].Texture = TextToTexture(Fonts[Font_Name], GetPlayerName(i));
+        NameCache[i].Texture = TextToTextureColour(Fonts[Font_Name], GetPlayerName(i), Colour);
         TTF_SizeText(Fonts[Font_Name], GetPlayerName(i), &(NameCache[i].TextureSize.X), &(NameCache[i].TextureSize.Y));
     }
 }
@@ -398,11 +401,10 @@ int Min(int A, int B)
 /**
  * Convert text string into OpenGL texture. Returns its handle.
  */ 
-GLuint TextToTexture(TTF_Font* Font, char* Text)
+GLuint TextToTextureColour(TTF_Font* Font, char* Text, SDL_Color Colour)
 {
     SDL_Surface* Initial;
 	GLuint Texture;
-    SDL_Color Colour = {0, 0, 0};
 
 	Initial = TTF_RenderText_Blended(Font, Text, Colour);
     Texture = SurfaceToTexture(Initial);
@@ -410,6 +412,16 @@ GLuint TextToTexture(TTF_Font* Font, char* Text)
 	SDL_FreeSurface(Initial);
     return Texture;
 }
+
+/**
+ * Convert text string into OpenGL texture. Returns its handle.
+ */ 
+GLuint TextToTexture(TTF_Font* Font, char* Text)
+{
+    SDL_Color Colour = {0, 0, 0};
+    return TextToTextureColour(Font, Text, Colour);
+}
+
 /**
  * Centre a box in another box. Ignores Y.
  * Parameters:

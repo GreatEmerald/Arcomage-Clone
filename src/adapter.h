@@ -47,9 +47,18 @@ void SetSoundPlay(void (*SoundPlay) (int));
 void SetRedrawScreen(void (*RedrawScreen) () );
 void SetPlayCardAnimation(void (*PlayCardAnimation) (int, int) );
 int GetConfig(int Type);
+char* GetPlayerName(int Who);
 int GetColourType(char PlayerNum, char CardNum);
 void GetCardDBSize(int* NumPools, int** NumCards);
 void GetCardHandle(char PlayerNum, char PositionInHand, int* Pool, int* Card);
+int GetCurrentQuarry(int PlayerNum);
+int GetCurrentMagic(int PlayerNum);
+int GetCurrentDungeon(int PlayerNum);
+int GetCurrentBricks(int PlayerNum);
+int GetCurrentGems(int PlayerNum);
+int GetCurrentRecruits(int PlayerNum);
+int GetCurrentTower(int PlayerNum);
+int GetCurrentWall(int PlayerNum);
 
 char* GetFilePath(char* FileName);
 char***** GetCardDescriptionWords(int* NumPools, int** NumSentences, int*** NumLines, int**** NumWords);

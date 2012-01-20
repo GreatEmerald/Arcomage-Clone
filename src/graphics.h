@@ -84,7 +84,10 @@ void DrawCard(char Player, char Number, float X, float Y);
 void DrawCardAlpha(char Player, char Number, float X, float Y, float Alpha);
 void DrawFoldedAlpha(int Team, float X, float Y, float Alpha);
 void DrawFolded(int Team, float X, float Y);
-//void DrawStatus(int turn,struct Stats *Player);
+void DrawSmallNumber(int Number, SizeF Destination, SizeF BoundingBox);
+void DrawMediumNumbers(int Player);
+void DrawBigNumbers(int Player);
+void DrawStatus();
 char *DialogBox(int type,const char *fmt,...);
 int InRect(int x, int y, int x1, int y1, int x2, int y2);
 float FInRect(float x, float y, float x1, float y1, float x2, float y2);
@@ -93,6 +96,7 @@ void LoadSurface(char* filename, int Slot);
 void DoCredits();
 float FMax(float A, float B);
 float FMin(float A, float B);
+SDL_Rect AbsoluteTextureSize(Size TextureSize);
 float GetDrawScale();
 
 #endif

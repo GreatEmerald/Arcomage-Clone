@@ -308,8 +308,8 @@ void DrawCardAlpha(char Player, char Number, float X, float Y, float Alpha)
     DrawTextureAlpha(GfxData[SPRITES], TextureCoordinates[SPRITES], ItemPosition, ScreenPosition, DrawScale, Alpha);
     
     //GEm: Draw title text.
-    ItemPosition.x = 0; ItemPosition.w = CardCache[Pool][Card].TitleTexture.TextureSize.X;
-    ItemPosition.y = 0; ItemPosition.h = CardCache[Pool][Card].TitleTexture.TextureSize.Y;
+    ItemPosition = AbsoluteTextureSize(CardCache[Pool][Card].TitleTexture.TextureSize);
+    
     ScreenPosition.X += 4/(float)GetConfig(ResolutionX); ScreenPosition.Y += 4/(float)GetConfig(ResolutionY);
     BoundingBox.X = 88/(float)GetConfig(ResolutionX); BoundingBox.Y = 12/(float)GetConfig(ResolutionY);
     TextureSize.X = CardCache[Pool][Card].TitleTexture.TextureSize.X/(float)GetConfig(ResolutionX); TextureSize.Y = CardCache[Pool][Card].TitleTexture.TextureSize.Y/(float)GetConfig(ResolutionY);
@@ -328,8 +328,7 @@ void DrawCardAlpha(char Player, char Number, float X, float Y, float Alpha)
     ScreenPosition.Y += Spacing;
     for (i=0; i<CardCache[Pool][Card].DescriptionNum; i++)
     {
-        ItemPosition.x = 0; ItemPosition.w = CardCache[Pool][Card].DescriptionTextures[i].TextureSize.X;
-        ItemPosition.y = 0; ItemPosition.h = CardCache[Pool][Card].DescriptionTextures[i].TextureSize.Y;
+        ItemPosition = AbsoluteTextureSize(CardCache[Pool][Card].DescriptionTextures[i].TextureSize);
         TextureSize.X = CardCache[Pool][Card].DescriptionTextures[i].TextureSize.X/(float)GetConfig(ResolutionX); TextureSize.Y = CardCache[Pool][Card].DescriptionTextures[i].TextureSize.Y/(float)GetConfig(ResolutionY);
         ScreenPosition = CentreOnX(ScreenPosition, TextureSize, BoundingBox);
         DrawTextureAlpha(CardCache[Pool][Card].DescriptionTextures[i].Texture, CardCache[Pool][Card].DescriptionTextures[i].TextureSize, ItemPosition, ScreenPosition, 1.0, Alpha);
@@ -343,15 +342,13 @@ void DrawCardAlpha(char Player, char Number, float X, float Y, float Alpha)
     switch (Colour)
     {
         case CT_Blue:
-            ItemPosition.x = 0; ItemPosition.w = CardCache[Pool][Card].PriceTexture[1].TextureSize.X;
-            ItemPosition.y = 0; ItemPosition.h = CardCache[Pool][Card].PriceTexture[1].TextureSize.Y;
+            ItemPosition = AbsoluteTextureSize(CardCache[Pool][Card].PriceTexture[1].TextureSize);
             TextureSize.X = CardCache[Pool][Card].PriceTexture[1].TextureSize.X/(float)GetConfig(ResolutionX); TextureSize.Y = CardCache[Pool][Card].PriceTexture[1].TextureSize.Y/(float)GetConfig(ResolutionY);
             ScreenPosition = CentreOnX(ScreenPosition, TextureSize, BoundingBox);
             DrawTextureAlpha(CardCache[Pool][Card].PriceTexture[1].Texture, CardCache[Pool][Card].PriceTexture[1].TextureSize, ItemPosition, ScreenPosition, 1.0, Alpha);
             break;
         case CT_Green:
-            ItemPosition.x = 0; ItemPosition.w = CardCache[Pool][Card].PriceTexture[2].TextureSize.X;
-            ItemPosition.y = 0; ItemPosition.h = CardCache[Pool][Card].PriceTexture[2].TextureSize.Y;
+            ItemPosition = AbsoluteTextureSize(CardCache[Pool][Card].PriceTexture[2].TextureSize);
             TextureSize.X = CardCache[Pool][Card].PriceTexture[2].TextureSize.X/(float)GetConfig(ResolutionX); TextureSize.Y = CardCache[Pool][Card].PriceTexture[2].TextureSize.Y/(float)GetConfig(ResolutionY);
             ScreenPosition = CentreOnX(ScreenPosition, TextureSize, BoundingBox);
             DrawTextureAlpha(CardCache[Pool][Card].PriceTexture[2].Texture, CardCache[Pool][Card].PriceTexture[2].TextureSize, ItemPosition, ScreenPosition, 1.0, Alpha);
@@ -360,8 +357,7 @@ void DrawCardAlpha(char Player, char Number, float X, float Y, float Alpha)
             FatalError("FIXME: White cards not yet supported!");
             break;
         default: //GEm: Black and red cards, and anything else strange goes here.
-            ItemPosition.x = 0; ItemPosition.w = CardCache[Pool][Card].PriceTexture[0].TextureSize.X;
-            ItemPosition.y = 0; ItemPosition.h = CardCache[Pool][Card].PriceTexture[0].TextureSize.Y;
+            ItemPosition = AbsoluteTextureSize(CardCache[Pool][Card].PriceTexture[0].TextureSize);
             TextureSize.X = CardCache[Pool][Card].PriceTexture[0].TextureSize.X/(float)GetConfig(ResolutionX); TextureSize.Y = CardCache[Pool][Card].PriceTexture[0].TextureSize.Y/(float)GetConfig(ResolutionY);
             ScreenPosition = CentreOnX(ScreenPosition, TextureSize, BoundingBox);
             DrawTextureAlpha(CardCache[Pool][Card].PriceTexture[0].Texture, CardCache[Pool][Card].PriceTexture[0].TextureSize, ItemPosition, ScreenPosition, 1.0, Alpha);
@@ -506,41 +502,142 @@ void DrawDiscard(int X, int Y)
         DrawCard(Player[turn].Hand[c],272,96,255);
 }*/
 
-void DrawSmallNumber(int Resource, int X, int Y, int Offset)
+void DrawSmallNumber(int Number, SizeF Destination, SizeF BoundingBox)
 {
-    char str[4];
+    //GEm: Draw one, two or three numbers, aligned to the left.
+    //GEm: TODO: implement more than 2 players
+    SDL_Rect AbsoluteSize;
+    SizeF ObjectSize;
     int i;
-    sprintf(str, "%d", Resource);
-    for (i=0; str[i]!=0; i++)
-        str[i]=str[i]-'0'+Offset;
-    //BFont_PutStringFont(GfxData[SCREEN],numssmall,X,Y,str); //DEBUG
-}
-
-void DrawBigNumber(int Resource, int X, int Y)
-{
-    SDL_Rect recta,rectb;
-    int d1, d2;
-    d1 = Resource/10;
-    d2 = Resource%10;
+    float NumberLength = 0.0;
     
-    recta.w=22;recta.h=17;
-    recta.x=X;
-    recta.y=Y;
+    int HundredsDigit, TensDigit, OnesDigit;
     
-    rectb.y=0;
-    rectb.w=22;rectb.h=17;
+    HundredsDigit = Number/100;
+    TensDigit = Number/10%10;
+    OnesDigit = Number%10;
     
-    if (d1)
+    if (HundredsDigit > 0)
+        NumberLength += NumberCache[Numbers_Small][HundredsDigit].TextureSize.X/(float)GetConfig(ResolutionX);
+    if (TensDigit > 0 || HundredsDigit > 0)
+        NumberLength += NumberCache[Numbers_Small][TensDigit].TextureSize.X/(float)GetConfig(ResolutionX);
+    NumberLength += NumberCache[Numbers_Small][OnesDigit].TextureSize.X/(float)GetConfig(ResolutionX);
+    ObjectSize.X = NumberLength; ObjectSize.Y = BoundingBox.Y;
+    Destination = CentreOnX(Destination, ObjectSize, BoundingBox);
+    
+    if (HundredsDigit > 0)
     {
-       rectb.x=22*d1;
-       //SDL_BlitSurface(GfxData[NUMSBIG],&rectb,GfxData[SCREEN],&recta);//DEBUG
-       recta.x += 22;
+        AbsoluteSize = AbsoluteTextureSize(NumberCache[Numbers_Small][HundredsDigit].TextureSize);
+        DrawTexture(NumberCache[Numbers_Small][HundredsDigit].Texture, NumberCache[Numbers_Small][HundredsDigit].TextureSize, AbsoluteSize, Destination, 1.0);
+        
+        Destination.X += NumberCache[Numbers_Small][HundredsDigit].TextureSize.X/(float)GetConfig(ResolutionX);
     }
-    rectb.x=22*d2;
-    //SDL_BlitSurface(GfxData[NUMSBIG],&rectb,GfxData[SCREEN],&recta);//DEBUG
+    
+    if (TensDigit > 0 || HundredsDigit > 0)
+    {
+        AbsoluteSize = AbsoluteTextureSize(NumberCache[Numbers_Small][TensDigit].TextureSize);
+        DrawTexture(NumberCache[Numbers_Small][TensDigit].Texture, NumberCache[Numbers_Small][TensDigit].TextureSize, AbsoluteSize, Destination, 1.0);
+        
+        Destination.X += NumberCache[Numbers_Small][TensDigit].TextureSize.X/(float)GetConfig(ResolutionX);
+    }
+    
+    AbsoluteSize = AbsoluteTextureSize(NumberCache[Numbers_Small][OnesDigit].TextureSize);
+    DrawTexture(NumberCache[Numbers_Small][OnesDigit].Texture, NumberCache[Numbers_Small][OnesDigit].TextureSize, AbsoluteSize, Destination, 1.0);
 }
 
-void DrawStatus(int turn,struct Stats *Players) //DEBUG
+void DrawMediumNumbers(int Player)
+{
+    //GEm: Draw one, two or three numbers, aligned to the left.
+    //GEm: TODO: implement more than 2 players
+    SDL_Rect AbsoluteSize;
+    SizeF ScreenPosition;
+    int i, Resource;
+    
+    int HundredsDigit, TensDigit, OnesDigit;
+    
+    for (i=0; i<3; i++)
+    {
+        switch(i)
+        {
+            case 0:
+                Resource = GetCurrentBricks(Player);
+                break;
+            case 1:
+                Resource = GetCurrentGems(Player);
+                break;
+            default:
+                Resource = GetCurrentRecruits(Player);
+        }
+        HundredsDigit = Resource/100;
+        TensDigit = Resource/10%10;
+        OnesDigit = Resource%10;
+        
+        ScreenPosition.X = (11+706*Player)/800.0; ScreenPosition.Y = (263-13+72*i)/600.0;
+        
+        if (HundredsDigit > 0)
+        {
+            AbsoluteSize = AbsoluteTextureSize(NumberCache[Numbers_Medium][HundredsDigit].TextureSize);
+            DrawTexture(NumberCache[Numbers_Medium][HundredsDigit].Texture, NumberCache[Numbers_Medium][HundredsDigit].TextureSize, AbsoluteSize, ScreenPosition, 1.0);
+            
+            ScreenPosition.X += NumberCache[Numbers_Medium][HundredsDigit].TextureSize.X/(float)GetConfig(ResolutionX);
+        }
+        
+        if (TensDigit > 0 || HundredsDigit > 0)
+        {
+            AbsoluteSize = AbsoluteTextureSize(NumberCache[Numbers_Medium][TensDigit].TextureSize);
+            DrawTexture(NumberCache[Numbers_Medium][TensDigit].Texture, NumberCache[Numbers_Medium][TensDigit].TextureSize, AbsoluteSize, ScreenPosition, 1.0);
+            
+            ScreenPosition.X += NumberCache[Numbers_Medium][TensDigit].TextureSize.X/(float)GetConfig(ResolutionX);
+        }
+        
+        AbsoluteSize = AbsoluteTextureSize(NumberCache[Numbers_Medium][OnesDigit].TextureSize);
+        DrawTexture(NumberCache[Numbers_Medium][OnesDigit].Texture, NumberCache[Numbers_Medium][OnesDigit].TextureSize, AbsoluteSize, ScreenPosition, 1.0);
+    }
+}
+
+void DrawBigNumbers(int Player)
+{
+    //GEm: Draw one or two numbers, aligned to the left.
+    //GEm: TODO: implement more than 2 players
+    SDL_Rect AbsoluteSize;
+    SizeF ScreenPosition;
+    int i, Resource;
+    
+    int TensDigit;
+    int OnesDigit;
+    
+    for (i=0; i<3; i++)
+    {
+        switch(i)
+        {
+            case 0:
+                Resource = GetCurrentQuarry(Player);
+                break;
+            case 1:
+                Resource = GetCurrentMagic(Player);
+                break;
+            default:
+                Resource = GetCurrentDungeon(Player);
+        }
+        TensDigit = Resource/10;
+        OnesDigit = Resource%10;
+        
+        ScreenPosition.X = (15+706*Player)/800.0; ScreenPosition.Y = (241-15+72*i)/600.0;
+        
+        if (TensDigit > 0)
+        {
+            AbsoluteSize = AbsoluteTextureSize(NumberCache[Numbers_Big][TensDigit].TextureSize);
+            DrawTexture(NumberCache[Numbers_Big][TensDigit].Texture, NumberCache[Numbers_Big][TensDigit].TextureSize, AbsoluteSize, ScreenPosition, 1.0);
+            
+            ScreenPosition.X += NumberCache[Numbers_Big][TensDigit].TextureSize.X/(float)GetConfig(ResolutionX);
+        }
+        
+        AbsoluteSize = AbsoluteTextureSize(NumberCache[Numbers_Big][OnesDigit].TextureSize);
+        DrawTexture(NumberCache[Numbers_Big][OnesDigit].Texture, NumberCache[Numbers_Big][OnesDigit].TextureSize, AbsoluteSize, ScreenPosition, 1.0);
+    }
+}
+
+void DrawStatus()
 {
     int i;
     char* Name;
@@ -550,11 +647,10 @@ void DrawStatus(int turn,struct Stats *Players) //DEBUG
     //GEm: TODO: implement more than 2 players
     for (i=0; i<2; i++)
     {
-        //GEm: Print the name of the players, centred
-        AbsoluteSize.x = 0; AbsoluteSize.w = NameCache[i].TextureSize.X;
-        AbsoluteSize.y = 0; AbsoluteSize.h = NameCache[i].TextureSize.Y;
+        //GEm: Draw the name of the players, centred
+        AbsoluteSize = AbsoluteTextureSize(NameCache[i].TextureSize);
         
-        ScreenPosition.X = 11+(706*i)/800.0; ScreenPosition.Y = 170/600.0;
+        ScreenPosition.X = (11+706*i)/800.0; ScreenPosition.Y = 168/600.0;
         RelativeSize.X = NameCache[i].TextureSize.X/(float)GetConfig(ResolutionX);
         RelativeSize.Y = NameCache[i].TextureSize.Y/(float)GetConfig(ResolutionY);
         BoundingBox.X = 72/800.0; BoundingBox.Y = 7/600.0;
@@ -562,66 +658,21 @@ void DrawStatus(int turn,struct Stats *Players) //DEBUG
         
         DrawTexture(NameCache[i].Texture, NameCache[i].TextureSize, AbsoluteSize, ScreenPosition, 1.0);
         
+        //GEm: Draw the facility numbers.
+        DrawBigNumbers(i);
+        //GEm: Draw the resource numbers.
+        DrawMediumNumbers(i);
         
+        //GEm: Draw the tower height.
+        ScreenPosition.X = (103+551*i)/800.0; ScreenPosition.Y = (443-3)/600.0;
+        BoundingBox.X = 43/800.0; BoundingBox.Y = 7/600.0;
+        DrawSmallNumber(GetCurrentTower(i), ScreenPosition, BoundingBox);
         
+        //GEm: Draw the wall height.
+        ScreenPosition.X = (166+433*i)/800.0; ScreenPosition.Y = (443-3)/600.0;
+        BoundingBox.X = 36/800.0; BoundingBox.Y = 7/600.0;
+        DrawSmallNumber(GetCurrentWall(i), ScreenPosition, BoundingBox);
     }
-    
-    for (i=0;i<2;i++)
-	{
-	    for (j=0;j<3;j++)
-	    {
-            DrawSmallNumber((&Players[i].b)[j], 10+i*547, 115+j*72, Offset[j]);
-            DrawBigNumber((&Players[i].q)[j], 13+547*i, 91+j*72);
-        }
-        
-        
-        int d1, d2;
-        d1 = Players[i].q/10;
-        d2 = Players[i].q%10;
-        
-        j=0;
-        recta.w=22;recta.h=17;
-	    recta.x=13+547*i;recta.y=91+j*72;
-        rectb.y=0;
-        rectb.w=22;rectb.h=17;
-        
-        if (d1)
-        {
-           rectb.x=22*d1;
-           SDL_BlitSurface(GfxData[NUMSBIG],&rectb,GfxData[SCREEN],&recta);
-           recta.x += 22;
-        }
-        rectb.x=22*d2;
-        SDL_BlitSurface(GfxData[NUMSBIG],&rectb,GfxData[SCREEN],&recta);*/
-    	
-        //for (j=0;j<3;j++)
-		//{
-            
-            /*recta.w=22;recta.h=17;
-			recta.x=13+547*i;recta.y=91+j*72;
-			if (j==0) rectb.x=22*Players[i].q;
-			if (j==1) rectb.x=22*Players[i].m;
-			if (j==2) rectb.x=22*Players[i].d;
-            rectb.y=0;
-			rectb.w=22;rectb.h=17;
-		//	print big (yellow) numbers (quarry,magic,dungeons)
-			SDL_BlitSurface(GfxData[NUMSBIG],&rectb,GfxData[SCREEN],&recta);*/
-			/*if (j==0) {sprintf(b,"%d",Players[i].b);b[0]-='0'-'!';if (b[1]) b[1]-='0'-'!';if (b[2]) b[2]-='0'-'!';}
-			if (j==1) {sprintf(b,"%d",Players[i].g);b[0]-='0'-'+';if (b[1]) b[1]-='0'-'+';if (b[2]) b[2]-='0'-'+';}
-			if (j==2) {sprintf(b,"%d",Players[i].r);b[0]-='0'-'5';if (b[1]) b[1]-='0'-'5';if (b[2]) b[2]-='0'-'5';}*/
-			//sprintf(b,"%d",Players[i].b);
-			
-            //b[0]='!'+1; b[1]='!'+5; b[2]='!'+15; b[3]=0;
-            //b[0]-='0'-1; b[1]-='0'-1; b[2]-='0'-1; b[3]=0;
-		//	print small numbers (bricks,gems,recruits)
-			//BFont_PutStringFont(GfxData[SCREEN],numssmall,10+i*547,115+j*72,b);
-		//}
-    } //DEBUG
-//	print tower/wall numbers
-	sprintf(b,"%d",Players[0].t);BFont_PutString(GfxData[SCREEN],160-BFont_TextWidth(b)/2,317,b);
-	sprintf(b,"%d",Players[0].w);BFont_PutString(GfxData[SCREEN],242-BFont_TextWidth(b)/2,317,b);
-	sprintf(b,"%d",Players[1].w);BFont_PutString(GfxData[SCREEN],398-BFont_TextWidth(b)/2,317,b);
-	sprintf(b,"%d",Players[1].t);BFont_PutString(GfxData[SCREEN],resY-BFont_TextWidth(b)/2,317,b);
 }
 
 /**
@@ -814,7 +865,7 @@ void DrawUI()
     
     DrawTexture(GfxData[SPRITES], TextureCoordinates[SPRITES], ItemPosition, ScreenPosition, DrawScale*2.0);
     
-    ScreenPosition.X = (800.0-8.0-78.0)/800.0; ScreenPosition.Y = 205.0/600.0;
+    ScreenPosition.X = (800.0-8.0-78.0)/800.0; ScreenPosition.Y = 196.0/600.0;
     DrawTexture(GfxData[SPRITES], TextureCoordinates[SPRITES], ItemPosition, ScreenPosition, DrawScale*2.0);
     
     //GE: Draw two towers
@@ -910,6 +961,17 @@ float FMin(float A, float B)
         return A;
     else
         return B;
+}
+
+/**
+ * Returns the whole size of the texture in SDL_Rect
+ */ 
+SDL_Rect AbsoluteTextureSize(Size TextureSize)
+{
+    SDL_Rect Result;
+    Result.x = 0; Result.w = TextureSize.X;
+    Result.y = 0; Result.h = TextureSize.Y;
+    return Result;
 }
 
 int ValidInputChar(int c)
