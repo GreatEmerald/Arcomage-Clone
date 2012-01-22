@@ -103,60 +103,114 @@ void PrecacheCards()
         }
     }
     
-    free(NumCards);
-    
     PrecacheFonts();
-    //GE: TODO: Precache picture.
+    
+    PrecachePictures(NumPools, NumCards);
 }
 
-//GE: Add to the linked list.
-void PrecacheCard(const char* File, size_t Size)
+void PrecachePictures(int NumPools, int* NumCards)
 {
-    Picture* CurrentPicture;
-    Picture* CheckedPicture = PictureHead;
-    int bNew=0;
+    char*** PicturePaths = GetCardPicturePaths();
+    SDL_Rect** PictureCoords = GetCardPictureCoords();
+    int Pool, Card, EarlierCard;
+    int ArraySize=0;
+    int CurrentElement=0;
+    char bDuplicate=0;
+    SDL_Surface* Surface;
+    int* PictureMapping;
+    int i;
     
-    //printf(File);
-    if (!PictureHead)//GE: No cards precached, so don't overdo this.
-        bNew = 1;
-    else //GE: Let's find out if we already have this somewhere.
+    //GEm: Find out what size the PictureFileCache array has to be.
+    for (Pool=0; Pool<NumPools; Pool++)
     {
-        while (CheckedPicture)
+        for (Card=0; Card<NumCards[Pool]; Card++)
         {
-            //printf("PrecacheCard: Is %s = %s?\n", File, CheckedPicture->File);
-            if (!strcmp(File, CheckedPicture->File)) //GE: I thought strcpy() was counterintuitive. This takes the cake!
-                return; //GE: It's already been precached. Nothing to do.
-            //printf("No it's not.");
-            CheckedPicture = CheckedPicture->Next;
+            for (EarlierCard=0; EarlierCard<Card; EarlierCard++)
+            {
+                if (strcmp(PicturePaths[Pool][EarlierCard], PicturePaths[Pool][Card]) == 0)
+                {
+                    bDuplicate = 1;
+                    break;
+                }
+            }
+            if (!bDuplicate) //GEm: 0th element passes this automatically
+                ArraySize++;
+            bDuplicate = 0;
         }
     }
     
-    CurrentPicture = malloc(sizeof(Picture));
-    if (CurrentPicture == NULL) //GE: Allocate the memory to store this picture.
-        FatalError("Out of memory to allocate the image linked list! Please use fewer cards."); //GE: Oh noes, out of memory to allocate! ...actually they are but pointers, so I doubt you'd ever run out of it.
-    CurrentPicture->File = malloc(Size);
-    if (CurrentPicture->File == NULL) //GE: Allocate the memory to store this picture and string.
-        FatalError("Out of memory to allocate the image filename! Please use fewer cards."); //GE: Oh noes, out of memory to allocate! This one's quite a bit bigger.
-    strcpy(CurrentPicture->File, File);//GE: Set file and surface.
-    LoadSurface(CurrentPicture->File, &CurrentPicture->Surface);
-    if (bNew)
+    //GEm: Allocate the needed memory.
+    PictureFileCacheSize = ArraySize;
+    PictureFileCache = (OpenGLTexture*) malloc(PictureFileCacheSize * sizeof(OpenGLTexture));
+    PictureMapping = (int*) malloc(PictureFileCacheSize * sizeof(int));
+    
+    //GEm: Do the same thing, just write data this time.
+    bDuplicate = 0;
+    for (Pool=0; Pool<NumPools; Pool++)
     {
-        CurrentPicture->Next = NULL; //GE: This is added to the end of the list, so next is NULL.
-        PictureHead = CurrentPicture;
+        for (Card=0; Card<NumCards[Pool]; Card++)
+        {
+            for (EarlierCard=0; EarlierCard<Card; EarlierCard++)
+            {
+                if (strcmp(PicturePaths[Pool][EarlierCard], PicturePaths[Pool][Card]) == 0)
+                {
+                    for (i=0; i<PictureFileCacheSize; i++)
+                    {
+                        if (EarlierCard == PictureMapping[i])
+                        {
+                            CardCache[Pool][Card].PictureHandle = i;
+                            CardCache[Pool][Card].PictureCoords = PictureCoords[Pool][Card];
+                            break;
+                        }
+                    }
+                    bDuplicate = 1;
+                    break;
+                }
+            }
+            if (!bDuplicate)
+            {
+                Surface = IMG_Load(PicturePaths[Pool][Card]);
+                if (!Surface)
+                    FatalError("File '%s' is missing or corrupt.", PicturePaths[Pool][Card]);
+                PictureFileCache[CurrentElement].Texture = SurfaceToTexture(Surface);
+                PictureFileCache[CurrentElement].TextureSize.X = (*Surface).w;
+                PictureFileCache[CurrentElement].TextureSize.Y = (*Surface).h;
+                SDL_FreeSurface(Surface); Surface = NULL;
+                
+                CardCache[Pool][Card].PictureHandle = CurrentElement;
+                CardCache[Pool][Card].PictureCoords = PictureCoords[Pool][Card];
+                
+                PictureMapping[CurrentElement] = Card;
+                
+                CurrentElement++;
+            }
+            bDuplicate = 0;
+        }
     }
-    else
+    
+    free(PictureMapping);
+    
+    for (Pool=0; Pool<NumPools; Pool++)
     {
-        CurrentPicture->Next = PictureHead->Next;
-        PictureHead->Next = CurrentPicture;
+        free(PicturePaths[Pool]);
+        free(PictureCoords[Pool]);
     }
+    free(PicturePaths);
+    free(PictureCoords);
+    
+    free(NumCards);
 }
 
 void Graphics_Quit()
 {
 	int i;
-	/*BFont_FreeFont(numssmall);
-	BFont_FreeFont(font);
-	BFont_FreeFont(bigfont);*/
+    
+    //GEm: TODO: Free CardCache and all its textures
+    
+    for (i=0; i<PictureFileCacheSize; i++)
+        FreeTextures(PictureFileCache[i].Texture);
+    free(PictureFileCache);
+    
 	for (i=0;i<GFX_CNT;i++)
 		FreeTextures(GfxData[i]);
 }
@@ -286,6 +340,8 @@ void NewDrawCard(int C, int X, int Y, SDL_Surface* Sourface, Uint8 Alpha)//GE: S
 void DrawCardAlpha(char Player, char Number, float X, float Y, float Alpha)
 {
     int i;
+    float ResX = (float)GetConfig(ResolutionX);
+    float ResY = (float)GetConfig(ResolutionY);
     
     int Pool, Card;
     GetCardHandle(Player, Number, &Pool, &Card);
@@ -310,46 +366,46 @@ void DrawCardAlpha(char Player, char Number, float X, float Y, float Alpha)
     //GEm: Draw title text.
     ItemPosition = AbsoluteTextureSize(CardCache[Pool][Card].TitleTexture.TextureSize);
     
-    ScreenPosition.X += 4/(float)GetConfig(ResolutionX); ScreenPosition.Y += 4/(float)GetConfig(ResolutionY);
-    BoundingBox.X = 88/(float)GetConfig(ResolutionX); BoundingBox.Y = 12/(float)GetConfig(ResolutionY);
-    TextureSize.X = CardCache[Pool][Card].TitleTexture.TextureSize.X/(float)GetConfig(ResolutionX); TextureSize.Y = CardCache[Pool][Card].TitleTexture.TextureSize.Y/(float)GetConfig(ResolutionY);
+    ScreenPosition.X += 4/ResX; ScreenPosition.Y += 4/ResY;
+    BoundingBox.X = 88/ResX; BoundingBox.Y = 12/ResY;
+    TextureSize.X = CardCache[Pool][Card].TitleTexture.TextureSize.X/ResX; TextureSize.Y = CardCache[Pool][Card].TitleTexture.TextureSize.Y/ResY;
     ScreenPosition = CentreOnX(ScreenPosition, TextureSize, BoundingBox);
     
     DrawTextureAlpha(CardCache[Pool][Card].TitleTexture.Texture, CardCache[Pool][Card].TitleTexture.TextureSize, ItemPosition, ScreenPosition, 1.0, Alpha);
     
     //GEm: Draw description text.
-    ScreenPosition.X = X + 4/(float)GetConfig(ResolutionX); ScreenPosition.Y = Y + 72/(float)GetConfig(ResolutionY);
+    ScreenPosition.X = X + 4/ResX; ScreenPosition.Y = Y + 72/ResY;
     for (i=0; i<CardCache[Pool][Card].DescriptionNum; i++)
         BlockHeight += CardCache[Pool][Card].DescriptionTextures[i].TextureSize.Y; //GEm: Alternatively, I could just multiply one by DescriptionNum, but four iterations are not much.
     if (CardCache[Pool][Card].DescriptionTextures[CardCache[Pool][Card].DescriptionNum].TextureSize.X > 66*DrawScale*2 && CardCache[Pool][Card].DescriptionNum > 1 && BlockHeight <= 41*DrawScale*2) //GEm: If we'd overlap with price and have enough space
-        Spacing = ((41*DrawScale*2-BlockHeight)/(CardCache[Pool][Card].DescriptionNum+1))/(float)GetConfig(ResolutionY);
+        Spacing = ((41*DrawScale*2-BlockHeight)/(CardCache[Pool][Card].DescriptionNum+1))/ResY;
     else
-        Spacing = ((53*DrawScale*2-BlockHeight)/(CardCache[Pool][Card].DescriptionNum+1))/(float)GetConfig(ResolutionY);
+        Spacing = ((53*DrawScale*2-BlockHeight)/(CardCache[Pool][Card].DescriptionNum+1))/ResY;
     ScreenPosition.Y += Spacing;
     for (i=0; i<CardCache[Pool][Card].DescriptionNum; i++)
     {
         ItemPosition = AbsoluteTextureSize(CardCache[Pool][Card].DescriptionTextures[i].TextureSize);
-        TextureSize.X = CardCache[Pool][Card].DescriptionTextures[i].TextureSize.X/(float)GetConfig(ResolutionX); TextureSize.Y = CardCache[Pool][Card].DescriptionTextures[i].TextureSize.Y/(float)GetConfig(ResolutionY);
+        TextureSize.X = CardCache[Pool][Card].DescriptionTextures[i].TextureSize.X/ResX; TextureSize.Y = CardCache[Pool][Card].DescriptionTextures[i].TextureSize.Y/ResY;
         ScreenPosition = CentreOnX(ScreenPosition, TextureSize, BoundingBox);
         DrawTextureAlpha(CardCache[Pool][Card].DescriptionTextures[i].Texture, CardCache[Pool][Card].DescriptionTextures[i].TextureSize, ItemPosition, ScreenPosition, 1.0, Alpha);
-        ScreenPosition.Y += Spacing + CardCache[Pool][Card].DescriptionTextures[i].TextureSize.Y/(float)GetConfig(ResolutionY);
-        ScreenPosition.X = X + 4/(float)GetConfig(ResolutionX); //GEm: Reset X, keep Y.
+        ScreenPosition.Y += Spacing + CardCache[Pool][Card].DescriptionTextures[i].TextureSize.Y/ResY;
+        ScreenPosition.X = X + 4/ResX; //GEm: Reset X, keep Y.
     }
     
     //GEm: Draw card cost.
-    BoundingBox.X = 19/(float)GetConfig(ResolutionX); BoundingBox.Y = 12/(float)GetConfig(ResolutionY);
-    ScreenPosition.X = X + 77/(float)GetConfig(ResolutionX); ScreenPosition.Y = Y + 111/(float)GetConfig(ResolutionY);
+    BoundingBox.X = 19/800.0; BoundingBox.Y = 12/600.0;
+    ScreenPosition.X = X + 77/800.0; ScreenPosition.Y = Y + 111/600.0;
     switch (Colour)
     {
         case CT_Blue:
             ItemPosition = AbsoluteTextureSize(CardCache[Pool][Card].PriceTexture[1].TextureSize);
-            TextureSize.X = CardCache[Pool][Card].PriceTexture[1].TextureSize.X/(float)GetConfig(ResolutionX); TextureSize.Y = CardCache[Pool][Card].PriceTexture[1].TextureSize.Y/(float)GetConfig(ResolutionY);
+            TextureSize.X = CardCache[Pool][Card].PriceTexture[1].TextureSize.X/ResX; TextureSize.Y = CardCache[Pool][Card].PriceTexture[1].TextureSize.Y/ResY;
             ScreenPosition = CentreOnX(ScreenPosition, TextureSize, BoundingBox);
             DrawTextureAlpha(CardCache[Pool][Card].PriceTexture[1].Texture, CardCache[Pool][Card].PriceTexture[1].TextureSize, ItemPosition, ScreenPosition, 1.0, Alpha);
             break;
         case CT_Green:
             ItemPosition = AbsoluteTextureSize(CardCache[Pool][Card].PriceTexture[2].TextureSize);
-            TextureSize.X = CardCache[Pool][Card].PriceTexture[2].TextureSize.X/(float)GetConfig(ResolutionX); TextureSize.Y = CardCache[Pool][Card].PriceTexture[2].TextureSize.Y/(float)GetConfig(ResolutionY);
+            TextureSize.X = CardCache[Pool][Card].PriceTexture[2].TextureSize.X/ResX; TextureSize.Y = CardCache[Pool][Card].PriceTexture[2].TextureSize.Y/ResY;
             ScreenPosition = CentreOnX(ScreenPosition, TextureSize, BoundingBox);
             DrawTextureAlpha(CardCache[Pool][Card].PriceTexture[2].Texture, CardCache[Pool][Card].PriceTexture[2].TextureSize, ItemPosition, ScreenPosition, 1.0, Alpha);
             break;
@@ -358,47 +414,23 @@ void DrawCardAlpha(char Player, char Number, float X, float Y, float Alpha)
             break;
         default: //GEm: Black and red cards, and anything else strange goes here.
             ItemPosition = AbsoluteTextureSize(CardCache[Pool][Card].PriceTexture[0].TextureSize);
-            TextureSize.X = CardCache[Pool][Card].PriceTexture[0].TextureSize.X/(float)GetConfig(ResolutionX); TextureSize.Y = CardCache[Pool][Card].PriceTexture[0].TextureSize.Y/(float)GetConfig(ResolutionY);
+            TextureSize.X = CardCache[Pool][Card].PriceTexture[0].TextureSize.X/ResX; TextureSize.Y = CardCache[Pool][Card].PriceTexture[0].TextureSize.Y/ResY;
             ScreenPosition = CentreOnX(ScreenPosition, TextureSize, BoundingBox);
             DrawTextureAlpha(CardCache[Pool][Card].PriceTexture[0].Texture, CardCache[Pool][Card].PriceTexture[0].TextureSize, ItemPosition, ScreenPosition, 1.0, Alpha);
             break;
     }
     
-	/*SDL_Rect recta,rectb;
-	int RawX, RawY;
-	
-	char* File;
-	Picture* CurrentPicture = PictureHead;
-	
-	if (D_getPictureFileSize(0,c) == 1)
-	   return;
-	
-  File = malloc(D_getPictureFileSize(0,c));
-  //getchar();
-  printf("Drawing picture with size: %d\n", D_getPictureFileSize(0,c));
-  //getchar();
-  strcpy(File, D_getPictureFile(0,c));
-  printf("Allocation complete.\n");
-  //getchar();
-	
-	while (CurrentPicture)
-	{
-     if (!strcmp(CurrentPicture->File, File))
-	   {
-	     printf("Attempting to draw card.\n");  
-	     NewDrawCard(c,x,y,CurrentPicture->Surface, a);
-         free(File);
-         printf("Freeing complete.\n");
-         return;
-     }
-     CurrentPicture = CurrentPicture->Next;
-  }
-	getchar();
-	if (!bUseOriginalCards)
-	{
-	   recta.x=x;recta.y=y;recta.w=96;recta.h=128;
-     rectb.x=(c&0xFF)*96;rectb.y=(c>>8)*128;rectb.w=96;rectb.h=128;
-	}*/
+    
+	//GEm: Draw card image.
+    ItemPosition = CardCache[Pool][Card].PictureCoords;
+    BoundingBox.X = 88/800.0; BoundingBox.Y = 52/600.0;
+    float CustomDrawScale = FMax(BoundingBox.X/(ItemPosition.w/ResX), BoundingBox.Y/(ItemPosition.h/ResY));
+    SizeF NewSize = {(ItemPosition.w/ResX)*CustomDrawScale, (ItemPosition.h/ResY)*CustomDrawScale};
+    SizeF DeltaSize = {NewSize.X-BoundingBox.X, NewSize.Y-BoundingBox.Y};
+    ItemPosition.x += DeltaSize.X*ResX/2.0; ItemPosition.w -=  DeltaSize.X*ResX;
+    ItemPosition.y += DeltaSize.Y*ResY/2.0; ItemPosition.h -=  DeltaSize.Y*ResY;
+    ScreenPosition.X = X + 4/800.0; ScreenPosition.Y = Y + 19/600.0;
+    DrawTextureAlpha(PictureFileCache[CardCache[Pool][Card].PictureHandle].Texture, PictureFileCache[CardCache[Pool][Card].PictureHandle].TextureSize, ItemPosition, ScreenPosition, CustomDrawScale, Alpha);
 }
 
 inline void DrawCard(char Player, char Number, float X, float Y)
@@ -560,13 +592,13 @@ void DrawMediumNumbers(int Player)
         switch(i)
         {
             case 0:
-                Resource = GetCurrentBricks(Player);
+                Resource = GetResource(Player, RT_Bricks);
                 break;
             case 1:
-                Resource = GetCurrentGems(Player);
+                Resource = GetResource(Player, RT_Gems);
                 break;
             default:
-                Resource = GetCurrentRecruits(Player);
+                Resource = GetResource(Player, RT_Recruits);
         }
         HundredsDigit = Resource/100;
         TensDigit = Resource/10%10;
@@ -611,13 +643,13 @@ void DrawBigNumbers(int Player)
         switch(i)
         {
             case 0:
-                Resource = GetCurrentQuarry(Player);
+                Resource = GetResource(Player, RT_Quarry);
                 break;
             case 1:
-                Resource = GetCurrentMagic(Player);
+                Resource = GetResource(Player, RT_Magic);
                 break;
             default:
-                Resource = GetCurrentDungeon(Player);
+                Resource = GetResource(Player, RT_Dungeon);
         }
         TensDigit = Resource/10;
         OnesDigit = Resource%10;
@@ -666,12 +698,12 @@ void DrawStatus()
         //GEm: Draw the tower height.
         ScreenPosition.X = (103+551*i)/800.0; ScreenPosition.Y = (443-3)/600.0;
         BoundingBox.X = 43/800.0; BoundingBox.Y = 7/600.0;
-        DrawSmallNumber(GetCurrentTower(i), ScreenPosition, BoundingBox);
+        DrawSmallNumber(GetResource(i, RT_Tower), ScreenPosition, BoundingBox);
         
         //GEm: Draw the wall height.
         ScreenPosition.X = (166+433*i)/800.0; ScreenPosition.Y = (443-3)/600.0;
         BoundingBox.X = 36/800.0; BoundingBox.Y = 7/600.0;
-        DrawSmallNumber(GetCurrentWall(i), ScreenPosition, BoundingBox);
+        DrawSmallNumber(GetResource(i, RT_Wall), ScreenPosition, BoundingBox);
     }
 }
 
@@ -810,7 +842,8 @@ void DrawBackground()
     float ResY = (float)GetConfig(ResolutionY);
     
     //GE: Draw the background. The whole system is a difficult way of caltulating the bounding box to fit the thing in without stretching.
-    SDL_Rect SourceCoords = {0, 0, 640, 311};
+    SDL_Rect SourceCoords = {0,0,0,0};
+    SourceCoords.w = TextureCoordinates[GAMEBG].X; SourceCoords.h = TextureCoordinates[GAMEBG].Y;
     SizeF BoundingBox = {800.f/(float)GetConfig(ResolutionX), 300.f/(float)GetConfig(ResolutionY)};
     float DrawScale = FMax(BoundingBox.X/((float)TextureCoordinates[GAMEBG].X/(float)GetConfig(ResolutionX)), BoundingBox.Y/((float)TextureCoordinates[GAMEBG].Y/(float)GetConfig(ResolutionY)));
     SizeF NewSize = {((float)TextureCoordinates[GAMEBG].X/(float)GetConfig(ResolutionX))*DrawScale, ((float)TextureCoordinates[GAMEBG].Y/(float)GetConfig(ResolutionY))*DrawScale};

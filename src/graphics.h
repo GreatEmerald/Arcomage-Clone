@@ -57,17 +57,19 @@ typedef struct S_OpenGLTexture
 typedef struct S_CachedCard
 {
     OpenGLTexture TitleTexture;
-    OpenGLTexture PictureTexture;
+    int PictureHandle; //GE: Links to PictureFileCache[PictureHandle]
     SDL_Rect PictureCoords;
     OpenGLTexture* DescriptionTextures;
     int DescriptionNum;
     OpenGLTexture PriceTexture[3]; //GE: Bricks, gems, recruits
 } CachedCard;
-
 CachedCard** CardCache;
 
+OpenGLTexture* PictureFileCache;
+int PictureFileCacheSize;
+
 void PrecacheCards();
-void PrecacheCard(const char* File, size_t Size);
+void PrecachePictures(int NumPools, int* NumCards);
 
 void Graphics_Init();
 void Graphics_Quit();

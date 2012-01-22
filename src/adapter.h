@@ -9,6 +9,8 @@
 #ifndef __ADAPTER_H__
 #define __ADAPTER_H__
 
+#include <SDL.h>
+
 int Turn;
 
 enum ConfigTypes {
@@ -34,6 +36,17 @@ enum ConfigTypes {
     ResolutionY
 };
 
+enum ResourceTypes {
+    RT_Quarry=0,
+    RT_Magic,
+    RT_Dungeon,
+    RT_Bricks,
+    RT_Gems,
+    RT_Recruits,
+    RT_Tower,
+    RT_Wall
+};
+
 enum ColourTypes {
     CT_Red=0,
     CT_Blue,
@@ -51,15 +64,9 @@ char* GetPlayerName(int Who);
 int GetColourType(char PlayerNum, char CardNum);
 void GetCardDBSize(int* NumPools, int** NumCards);
 void GetCardHandle(char PlayerNum, char PositionInHand, int* Pool, int* Card);
-int GetCurrentQuarry(int PlayerNum);
-int GetCurrentMagic(int PlayerNum);
-int GetCurrentDungeon(int PlayerNum);
-int GetCurrentBricks(int PlayerNum);
-int GetCurrentGems(int PlayerNum);
-int GetCurrentRecruits(int PlayerNum);
-int GetCurrentTower(int PlayerNum);
-int GetCurrentWall(int PlayerNum);
-
+char*** GetCardPicturePaths();
+SDL_Rect** GetCardPictureCoords();
+int GetResource(int PlayerNum, int Type);
 char* GetFilePath(char* FileName);
 char***** GetCardDescriptionWords(int* NumPools, int** NumSentences, int*** NumLines, int**** NumWords);
 char*** GetCardTitleWords();
