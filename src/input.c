@@ -1,10 +1,7 @@
 #include <SDL.h>
-#include "common.h"
 #include "graphics.h"
-#include "sound.h"
-#include "config.h"
-//#include "arco.h"
-//extern int turn, aiplayer;
+#include "adapter.h"
+//#include "sound.h"
 
 SDL_Event event;
 int bRefreshNeeded=0; ///< True if we need to refresh the screen. Used in the input loop.
@@ -64,31 +61,19 @@ void WaitForInput()
 void DoGame()
 {
     int i;
-    int crd,netcard,discrd;
-    int quit=0;
-    //GE: Stupid C not supporting string functions :(
-    //GE: I correct myself: stupid C not supporting strings at all! Who designed this?!
+    int crd,netcard;
+    char quit=0, bDiscarded=0;
 
-    InitGame();
-    // init screen
-    Blit(GAMEBG,SCREEN);
-    RedrawScreenFull();
-
-    while (!quit && !Winner(0) && !Winner(1))
+    while (!quit && !IsVictorious(0) && !IsVictorious(1))
     {
 
-        while(SDL_PollEvent(&event));//GE: Delete all events from the event queue before our turn.
+        while (SDL_PollEvent(&event));//GE: Delete all events from the event queue before our turn.
 
-        if (turn==aiplayer)
+        if (GetIsAI(Turn))
         {
-            AIPlay(&i,&discrd);
             SDL_Delay(500);
-            if (CanPlayCard(i,discrd))
-			{
-				PlayCardAnimation(i, discrd);
-				PlayCard(i,discrd);
-			}
-        } else
+            AIPlay();
+        } /*else //GEm: TODO Netplay
         if (turn==netplayer)
         {
             if (NetRemPlay(&i,&discrd) && CanPlayCard(i,discrd))
@@ -101,19 +86,18 @@ void DoGame()
                 WaitForInput();
                 return;
             }
-        } else {
+        } */else {
             while (!quit)
             {
                 if (!SDL_PollEvent(&event))
                     continue;
-                SDL_Delay(CPUWAIT);
-                quit=(event.type==SDL_KEYUP&&event.key.keysym.sym==SDLK_ESCAPE);
-                if (event.type==SDL_KEYDOWN&&event.key.keysym.sym==SDLK_b) //GE: Keeping as "down" since it's urgent ;)
-                    Boss();
-                if ( event.type == SDL_MOUSEMOTION && InRect(event.motion.x, event.motion.y,   8,342,  8+94,468) ) //GE: Support for highlighting cards, to be done: card tooltips.
+                SDL_Delay(0); //GEm: HACK
+                quit = (event.type == SDL_KEYUP && event.key.keysym.sym == SDLK_ESCAPE);
+                /*if (event.type == SDL_KEYDOWN && event.key.keysym.sym == SDLK_b) //GE: Keeping as "down" since it's urgent ;)
+                    Boss();*/ //GEm: TODO boss screen
+                /*if ( event.type == SDL_MOUSEMOTION && InRect(event.motion.x, event.motion.y,   8,342,  8+94,468) ) //GE: Support for highlighting cards, to be done: card tooltips.
                 {
                     Blit(SCREEN, BUFFER);
-                    //DrawRectangle(8,342,96,128, 0xFF0000);//OBSOLETE
                     UpdateScreen();
                     bRefreshNeeded=1;
                 }
@@ -121,10 +105,11 @@ void DoGame()
                 {
                     RedrawScreen(turn, Player);
                     bRefreshNeeded=0;
-                }
+                }*/ //GEm: TODO: Card highlighting
 
-                if (event.type!=SDL_MOUSEBUTTONUP || event.button.button>3) continue;
-                discrd=(event.button.button==2)||(event.button.button==3);
+                if (event.type != SDL_MOUSEBUTTONUP || event.button.button > 3)
+                    continue;
+                bDiscarded = (event.button.button == 2) || (event.button.button == 3);
                 if (InRect(event.button.x,event.button.y,  8,342,  8+94,468)&&(discrd||Requisite(&Player[turn],0))) {crd=0;break;}
                 if (InRect(event.button.x,event.button.y,114,342,114+94,468)&&(discrd||Requisite(&Player[turn],1))) {crd=1;break;}
                 if (InRect(event.button.x,event.button.y,220,342,220+94,468)&&(discrd||Requisite(&Player[turn],2))) {crd=2;break;}
@@ -134,15 +119,11 @@ void DoGame()
             }
             if (!quit)
             {
-                netcard = Player[turn].Hand[crd];
-                if (CanPlayCard(i,discrd))
-				{
-					PlayCardAnimation(crd, discrd);
-					PlayCard(crd,discrd);
-				}
+                //netcard = Player[turn].Hand[crd];//GEm: TODO: Netplay
+                PlayCard(crd, bDiscarded);
                 
-                if (netplayer!=-1)
-                    NetLocPlay(crd,discrd,netcard);
+                /*if (netplayer!=-1)
+                    NetLocPlay(crd,discrd,netcard);*/ //GEm: TODO: Netplay
             }
         }
         SDL_Delay(CPUWAIT);

@@ -81,6 +81,7 @@ void FillRect(int x,int y,int w,int h,Uint8 r,Uint8 g,Uint8 b);
 void DrawMenuItem(int Type, char Lit);
 int Menu();
 void DrawBackground();
+void DrawStaticScene();
 void DrawLogo();
 void DrawCard(char Player, char Number, float X, float Y);
 void DrawCardAlpha(char Player, char Number, float X, float Y, float Alpha);

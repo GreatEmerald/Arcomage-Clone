@@ -13,6 +13,7 @@
 #include "adapter.h"
 #include "graphics.h"
 #include "ttf.h"
+#include "input.h"
 
 /**
  * Utility function for printing out error messages.
@@ -80,15 +81,12 @@ int main(int argc,char *argv[])
             SetPlayerInfo(GetEnemy(), "AI", 1);//Player[GetEnemy()].AI = 1;
             PrecachePlayerNames(); //GEm: We couldn't precache it earlier, since we didn't know the names!
             
-            ClearScreen();
-            DrawBackground();
-            DrawFoldedAlpha(0, 120.0/800.0, 166.0/600.0, (float)GetConfig(CardTranslucency)/255.0);
-            DrawUI();
-            
+            DoGame();
+            DrawStaticScene();
             for (n=0; n<2; n++)
                 for (i=0; i<GetConfig(CardsInHand); i++)
                     DrawCard(n, i, 1.0/GetConfig(CardsInHand)*i, 0.77*n);
-            DrawStatus();
+            
             //DrawTextLine("This is a test string!", TestLocation);
             UpdateScreen();
             getchar();

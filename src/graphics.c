@@ -955,6 +955,19 @@ void DrawUI()
     
 }
 
+/**
+ * Draws all of the non-moving elements in the main game scene. That means
+ * everything except for cards.
+ */
+void DrawStaticScene()
+{
+    ClearScreen();
+    DrawBackground();
+    DrawFoldedAlpha(0, 120.0/800.0, 166.0/600.0, (float)GetConfig(CardTranslucency)/255.0);
+    DrawUI();
+    DrawStatus();
+}
+
 void DrawLogo()
 {
     SDL_Rect ItemPosition;

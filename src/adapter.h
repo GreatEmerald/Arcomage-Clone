@@ -11,8 +11,6 @@
 
 #include <SDL.h>
 
-int Turn;
-
 enum ConfigTypes {
     Fullscreen=0,
     SoundEnabled,
@@ -61,6 +59,7 @@ void SetRedrawScreen(void (*RedrawScreen) () );
 void SetPlayCardAnimation(void (*PlayCardAnimation) (int, int) );
 int GetConfig(int Type);
 char* GetPlayerName(int Who);
+char GetIsAI(int Who);
 int GetColourType(char PlayerNum, char CardNum);
 void GetCardDBSize(int* NumPools, int** NumCards);
 void GetCardHandle(char PlayerNum, char PositionInHand, int* Pool, int* Card);
@@ -71,5 +70,10 @@ char* GetFilePath(char* FileName);
 char***** GetCardDescriptionWords(int* NumPools, int** NumSentences, int*** NumLines, int**** NumWords);
 char*** GetCardTitleWords();
 void initGame();
+
+//GEm: From cards.d
+int Turn;
+char IsVictorious(int PlayerNumber);
+void AIPlay();
 
 #endif

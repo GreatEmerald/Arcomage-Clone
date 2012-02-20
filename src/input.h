@@ -3,5 +3,6 @@
 
 void WaitForKey(int sym);
 void WaitForInput();
+void DoGame();
 
 #endif
