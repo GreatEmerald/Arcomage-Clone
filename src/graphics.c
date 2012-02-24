@@ -81,6 +81,8 @@ void Graphics_Init()
     if (!font)
 	FatalError("Data file 'font.png' is missing or corrupt.");
     BFont_SetCurrentFont(font);*/
+    
+    InitCardLocations(2);
 }
 
 void PrecacheCards()
@@ -201,9 +203,40 @@ void PrecachePictures(int NumPools, int* NumCards)
     free(NumCards);
 }
 
+/**
+ * Initialise the position of each card in both hands. It is slightly randomised
+ * on Z to provide an illusion of being true cards (which are rarely neatly
+ * aligned in the real world).
+ */ 
+void InitCardLocations(int NumPlayers)
+{
+    int i, n;
+    int NumCards = GetConfig(CardsInHand);
+    float DrawScale = GetDrawScale();
+    float CardWidth = NumCards*192*DrawScale;
+    float Spacing = (1.0-CardWidth)/(NumCards+1);
+    
+    CardLocations = (SizeF**) malloc(NumPlayers * sizeof(SizeF*));
+    for (i=0; i < NumPlayers; i++)
+    {
+        CardLocations[i] = (SizeF*) malloc(NumCards * sizeof(SizeF));
+        for (n=0; n < NumCards; n++)
+        {
+            CardLocations[i][n].X = Spacing*(n+1)+CardWidth*n;
+            CardLocations[i][n].Y = 0.77*i;
+        }
+    }
+    
+    
+}
+
 void Graphics_Quit()
 {
 	int i;
+    
+    for (i=0; i < 2; i++) //GEm: TODO: Implement multiple players
+        free(CardLocations[i]);
+    free(CardLocations);
     
     //GEm: TODO: Free CardCache and all its textures
     

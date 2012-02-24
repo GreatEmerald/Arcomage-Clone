@@ -60,12 +60,16 @@ void WaitForInput()
  */
 void DoGame()
 {
-    int i;
+    int i, n;
     int crd,netcard;
     char quit=0, bDiscarded=0;
 
     while (!quit && !IsVictorious(0) && !IsVictorious(1))
     {
+        DrawStaticScene();
+        for (n=0; n<2; n++)
+            for (i=0; i<GetConfig(CardsInHand); i++)
+                DrawCard(n, i, 1.0/GetConfig(CardsInHand)*i, 0.77*n);
 
         while (SDL_PollEvent(&event));//GE: Delete all events from the event queue before our turn.
 

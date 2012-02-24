@@ -64,6 +64,7 @@ typedef struct S_CachedCard
     OpenGLTexture PriceTexture[3]; //GE: Bricks, gems, recruits
 } CachedCard;
 CachedCard** CardCache;
+SizeF** CardLocations; //GE: Where on the screen all our cards are.
 
 OpenGLTexture* PictureFileCache;
 int PictureFileCacheSize;
