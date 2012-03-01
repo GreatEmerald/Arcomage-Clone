@@ -1,6 +1,7 @@
 #include <stdlib.h>
 #include <stdarg.h>
 #include <string.h>
+#include <time.h>
 #include <SDL.h>
 #include <SDL_opengl.h>
 #include <SDL_image.h>
@@ -223,7 +224,7 @@ void InitCardLocations(int NumPlayers)
         for (n=0; n < NumCards; n++)
         {
             CardLocations[i][n].X = Spacing*(n+1)+CardWidth*n;
-            CardLocations[i][n].Y = 0.77*i;
+            CardLocations[i][n].Y = ((FRand()*12.0-6.0)+(6 + 466*i))/600.0;
         }
     }
     
@@ -470,6 +471,26 @@ inline void DrawCard(char Player, char Number, float X, float Y)
 {
 	DrawCardAlpha(Player, Number, X, Y, 1.0);
 }
+
+void DrawAllPlayerCards()
+{
+    int i, n;
+    
+    for (n=0; n<2; n++) //GEm: TODO More than 2 players
+        for (i=0; i<GetConfig(CardsInHand); i++)
+            DrawCard(n, i, CardLocations[n][i].X, CardLocations[n][i].Y);
+}
+
+void DrawXPlayerCards(int PlayerNum, int CardNum)
+{
+    int i, n;
+    
+    for (n=0; n<2; n++) //GEm: TODO More than 2 players
+        for (i=0; i<GetConfig(CardsInHand); i++)
+            if (n != PlayerNum && i != CardNum)
+                DrawCard(n, i, CardLocations[n][i].X, CardLocations[n][i].Y);
+}
+
 
 void DrawFoldedAlpha(int Team, float X, float Y, float Alpha)
 {
@@ -1013,6 +1034,35 @@ void DrawLogo()
     ItemPosition.w = (int)TextureCoordinates[TITLE].X; ItemPosition.h = (int)TextureCoordinates[TITLE].Y;
     
     DrawTexture(GfxData[TITLE], TextureCoordinates[TITLE], ItemPosition, ScreenPosition, DrawScale*2.0);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+void PlayCardAnimation(int CardPlace, int bDiscarded)
+{
+    const int FloatToHnsecs = 1000000;
+    
+    SizeF Destination = {0.5-96/2/800.0; 0.5-128/2/600.0};
+    SizeF CurrentLocation;
+    long long AnimDuration = 1.0*FloatToHnsecs;
+    long long CurrentTime, StartTime = GetCurrentTime();
+    float ElapsedPercentage;
+    
+    CurrentTime = GetCurrentTime();
+    while (CurrentTime < StartTime + AnimDuration)
+    {
+        DrawBackground();
+        DrawXPlayerCards(Turn, CardPlace);
+        
+        CurrentLocation.X = CardLocations[Turn][CardPlace].X + (Destination.X - CardLocations[Turn][CardPlace].X)*ElapsedPercentage;
+        CurrentLocation.Y = CardLocations[Turn][CardPlace].Y + (Destination.Y - CardLocations[Turn][CardPlace].Y)*ElapsedPercentage;
+        DrawCard(Turn, CardPlace, CurrentLocation.X, CurentLocation.Y);
+        UpdateScreen();
+        
+        CurrentTime = GetCurrentTime();
+        ElapsedPercentage = (CurrentTime-StartTime)/AnimDuration;
+    }
+    
 }
 
 ////////////////////////////////////////////////////////////////////////////////

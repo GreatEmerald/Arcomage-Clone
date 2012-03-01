@@ -86,6 +86,8 @@ void DrawStaticScene();
 void DrawLogo();
 void DrawCard(char Player, char Number, float X, float Y);
 void DrawCardAlpha(char Player, char Number, float X, float Y, float Alpha);
+void DrawAllPlayerCards();
+void DrawXPlayerCards(int PlayerNum, int CardNum);
 void DrawFoldedAlpha(int Team, float X, float Y, float Alpha);
 void DrawFolded(int Team, float X, float Y);
 void DrawSmallNumber(int Number, SizeF Destination, SizeF BoundingBox);

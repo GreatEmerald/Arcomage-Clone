@@ -60,16 +60,19 @@ void SetPlayCardAnimation(void (*PlayCardAnimation) (int, int) );
 int GetConfig(int Type);
 char* GetPlayerName(int Who);
 char GetIsAI(int Who);
+char GetCanPlayCard(int Who, char CardNum, char bDiscarded);
 int GetColourType(char PlayerNum, char CardNum);
 void GetCardDBSize(int* NumPools, int** NumCards);
 void GetCardHandle(char PlayerNum, char PositionInHand, int* Pool, int* Card);
 char*** GetCardPicturePaths();
 SDL_Rect** GetCardPictureCoords();
 int GetResource(int PlayerNum, int Type);
-char* GetFilePath(char* FileName);
 char***** GetCardDescriptionWords(int* NumPools, int** NumSentences, int*** NumLines, int**** NumWords);
 char*** GetCardTitleWords();
 void initGame();
+char* GetFilePath(char* FileName);
+float FRand();
+long long GetCurrentTime();
 
 //GEm: From cards.d
 int Turn;

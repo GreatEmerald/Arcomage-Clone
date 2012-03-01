@@ -41,6 +41,9 @@ void Init()
     //    Sound_Init();
     Graphics_Init();
     InitTTF();
+    
+    SetPlayCardAnimation(&PlayCardAnimation);
+    
     initGame(); //Init a 1vs1 game, will choose player types later
 }
 
@@ -84,7 +87,6 @@ int main(int argc,char *argv[])
             DoGame();
             
             //DrawTextLine("This is a test string!", TestLocation);
-            UpdateScreen();
             getchar();
             //Player[Turn].Name = "Player";
             //Player[GetEnemy()].Name = "A.I.";
