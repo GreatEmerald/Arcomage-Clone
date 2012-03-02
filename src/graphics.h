@@ -47,6 +47,10 @@ typedef struct S_Range
 {
 	float X; float Y;
 } SizeF;
+typedef struct S_CardHandle
+{
+	int Pool; int Card;
+} CardHandle;
 
 typedef struct S_OpenGLTexture
 {
@@ -65,6 +69,8 @@ typedef struct S_CachedCard
 } CachedCard;
 CachedCard** CardCache;
 SizeF** CardLocations; //GE: Where on the screen all our cards are.
+
+CardHandle* PlayedCards; //GEm: Cards that are displayed on screen after they were played.
 
 OpenGLTexture* PictureFileCache;
 int PictureFileCacheSize;

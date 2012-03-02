@@ -362,30 +362,28 @@ void NewDrawCard(int C, int X, int Y, SDL_Surface* Sourface, Uint8 Alpha)//GE: S
 }
 
 /**
- * Draws a card on the screen.
+ * Draws a card on the screen by a given card handle.
  * 
  * In order to do that, the function needs to know which card to draw
  * and where. A card itself consists of the background, picture and
- * text for the name, description and cost(s). This function uses the
- * adapter to automatically get all the information it needs from D's
- * database - it only needs the number of the card in hand and the
- * player in question.
+ * text for the name, description and cost(s). This function requires the full
+ * card handle, as defined in D's CardDB(). For the function that needs only
+ * the current player number and the place in hand, see DrawCardAlpha().
  */
-void DrawCardAlpha(char Player, char Number, float X, float Y, float Alpha)
+
+void DrawHandleCardAlpha(int Pool, int Card, float X, float Y, float Alpha)
 {
     int i;
     float ResX = (float)GetConfig(ResolutionX);
     float ResY = (float)GetConfig(ResolutionY);
     
-    int Pool, Card;
-    GetCardHandle(Player, Number, &Pool, &Card);
     SizeF BoundingBox, TextureSize;
     float Spacing;
     int BlockHeight=0;
     
     //GE: Draw the background.
     //GE: First, get the background that we will be using.
-    int Colour = GetColourType(Player, Number);
+    int Colour = GetColourType(Pool, Card);
     
     SDL_Rect ItemPosition;
     SizeF ScreenPosition = {X, Y};
@@ -465,6 +463,19 @@ void DrawCardAlpha(char Player, char Number, float X, float Y, float Alpha)
     ItemPosition.y += DeltaSize.Y*ResY/2.0; ItemPosition.h -=  DeltaSize.Y*ResY;
     ScreenPosition.X = X + 4/800.0; ScreenPosition.Y = Y + 19/600.0;
     DrawTextureAlpha(PictureFileCache[CardCache[Pool][Card].PictureHandle].Texture, PictureFileCache[CardCache[Pool][Card].PictureHandle].TextureSize, ItemPosition, ScreenPosition, CustomDrawScale, Alpha);
+}
+
+inline void DrawHandleCard(int Pool, int Card, float X, float Y)
+{
+    DrawHandleCardAlpha(Pool, Card, X, Y, 1.0);
+}
+
+void DrawCardAlpha(char Player, char Number, float X, float Y, float Alpha)
+{
+    int Pool, Card;
+    GetCardHandle(Player, Number, &Pool, &Card);
+    
+    DrawHandleCardAlpha(Pool, Card, X, Y, Alpha);
 }
 
 inline void DrawCard(char Player, char Number, float X, float Y)
