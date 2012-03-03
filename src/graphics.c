@@ -26,6 +26,10 @@ BFont_Info *numssmall=NULL;
 BFont_Info *font=NULL;
 BFont_Info *bigfont=NULL;
 
+int CardsOnTableSize=0;
+CardHandle* CardsOnTable=NULL;
+char CardInTransit = -1;
+
 const int CPUWAIT=10; //DEBUG
 
 void Graphics_Init()
@@ -223,7 +227,7 @@ void InitCardLocations(int NumPlayers)
         CardLocations[i] = (SizeF*) malloc(NumCards * sizeof(SizeF));
         for (n=0; n < NumCards; n++)
         {
-            CardLocations[i][n].X = Spacing*(n+1)+CardWidth*n;
+            CardLocations[i][n].X = Spacing*(n+1)+192*DrawScale*n;
             CardLocations[i][n].Y = ((FRand()*12.0-6.0)+(6 + 466*i))/600.0;
         }
     }
@@ -247,6 +251,8 @@ void Graphics_Quit()
     
 	for (i=0;i<GFX_CNT;i++)
 		FreeTextures(GfxData[i]);
+    
+    free(CardsOnTable);
 }
 
 /**
@@ -1024,13 +1030,24 @@ void DrawUI()
  * Draws all of the non-moving elements in the main game scene. That means
  * everything except for cards.
  */
-void DrawStaticScene()
+void DrawScene()
 {
     ClearScreen();
     DrawBackground();
-    DrawFoldedAlpha(0, 120.0/800.0, 166.0/600.0, (float)GetConfig(CardTranslucency)/255.0);
+    SizeF BankLocation = GetCardOnTableLocation(0);
+    DrawFoldedAlpha(0, BankLocation.X, BankLocation.Y, (float)GetConfig(CardTranslucency)/255.0);
     DrawUI();
     DrawStatus();
+    if (CardInTransit > -1)
+    {
+        SizeF TransitingCardLocation;
+        TransitingCardLocation.X = 0.5-192*GetDrawScale()/2/800.0;
+        TransitingCardLocation.Y = 0.5-256*GetDrawScale()/2/600.0;
+        DrawHandleCard(CardsOnTable[CardsOnTableSize-1].Pool, CardsOnTable[CardsOnTableSize-1].Card, TransitingCardLocation.X, TransitingCardLocation.Y);
+        DrawXPlayerCards(Turn, CardInTransit);
+    }
+    else
+        DrawAllPlayerCards();
 }
 
 void DrawLogo()
@@ -1049,34 +1066,175 @@ void DrawLogo()
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void PlayCardAnimation(int CardPlace, int bDiscarded)
+void PlayCardAnimation(int CardPlace, char bDiscarded, char bSameTurn)
 {
     const int FloatToHnsecs = 1000000;
     
-    SizeF Destination = {0.5-96/2/800.0; 0.5-128/2/600.0};
+    SizeF Destination; Destination.X = 0.5-192*GetDrawScale()/2/800.0; Destination.Y = 0.5-256*GetDrawScale()/2/600.0;
     SizeF CurrentLocation;
-    long long AnimDuration = 1.0*FloatToHnsecs;
-    long long CurrentTime, StartTime = GetCurrentTime();
-    float ElapsedPercentage;
+    long long AnimDuration = 1.5*FloatToHnsecs;
+    long long StartTime = GetCurrentTime(), CurrentTime = GetCurrentTime();
+    float ElapsedPercentage = (CurrentTime-StartTime)/AnimDuration;
     
-    CurrentTime = GetCurrentTime();
+    int i;
+    SizeF BankLocation = GetCardOnTableLocation(0);
+    
     while (CurrentTime < StartTime + AnimDuration)
     {
+        ClearScreen();
         DrawBackground();
+        
+        //GEm: Draw the cards moving into the bank.
+        if (!bSameTurn)
+        {
+            for (i=0; i<CardsOnTableSize; i++)
+            {
+                CurrentLocation = GetCardOnTableLocation(i+1);
+                CurrentLocation.X = CurrentLocation.X + (BankLocation.X - CurrentLocation.X)*ElapsedPercentage;
+                CurrentLocation.Y = CurrentLocation.Y + (BankLocation.Y - CurrentLocation.Y)*ElapsedPercentage;
+                DrawHandleCardAlpha(CardsOnTable[i].Pool, CardsOnTable[i].Card, CurrentLocation.X, CurrentLocation.Y, (1.0-ElapsedPercentage)*(GetConfig(CardTranslucency)/255.0));
+            }
+        }
+        
+        DrawFoldedAlpha(0, BankLocation.X, BankLocation.Y, (float)GetConfig(CardTranslucency)/255.0);
+        DrawUI();
+        DrawStatus();
         DrawXPlayerCards(Turn, CardPlace);
         
+        //GEm: Draw the card in transit.
         CurrentLocation.X = CardLocations[Turn][CardPlace].X + (Destination.X - CardLocations[Turn][CardPlace].X)*ElapsedPercentage;
         CurrentLocation.Y = CardLocations[Turn][CardPlace].Y + (Destination.Y - CardLocations[Turn][CardPlace].Y)*ElapsedPercentage;
-        DrawCard(Turn, CardPlace, CurrentLocation.X, CurentLocation.Y);
+        DrawCard(Turn, CardPlace, CurrentLocation.X, CurrentLocation.Y);
+        
         UpdateScreen();
         
         CurrentTime = GetCurrentTime();
         ElapsedPercentage = (CurrentTime-StartTime)/AnimDuration;
     }
     
+    CardInTransit = CardPlace;
+    if (!bSameTurn) //GEm: New turn
+    {
+        if (CardsOnTable == NULL || CardsOnTableSize > 1) //GEm: Alternatively, use CardsOnTableMax and CardsOnTableSize to cut down on reallocation and increase RAM usage
+            CardsOnTable = (CardHandle*) realloc(CardsOnTable, sizeof(CardHandle);
+        CardsOnTableSize = 1;
+        GetCardHandle(Turn, CardPlace, &(CardsOnTable[0].Pool), &(CardsOnTable[0].Card));
+    }
+    else
+    {
+        CardsOnTableSize++;
+        CardsOnTable = (CardHandle*) realloc(CardsOnTable, CardsOnTableSize*sizeof(CardHandle)); //GEm: Hm, there is no way to find the length of a pointer array, yet realloc does it just fine?..
+        GetCardHandle(Turn, CardPlace, &(CardsOnTable[CardsOnTableSize-1].Pool), &(CardsOnTable[CardsOnTableSize-1].Card));
+    }
+}
+
+/**
+ * Plays the animation of the card in translit going to the right location on
+ * the table and the bank handing out a card to the player.
+ */ 
+void PlayCardPostAnimation(int CardPlace)
+{
+    const int FloatToHnsecs = 1000000;
+    
+    SizeF Source; Source.X = 0.5-192*GetDrawScale()/2/800.0; Source.Y = 0.5-256*GetDrawScale()/2/600.0;
+    SizeF Destination = GetCardOnTableLocation(CardsOnTableSize-1);
+    SizeF CurrentLocation;
+    long long AnimDuration = 1.5*FloatToHnsecs;
+    long long StartTime = GetCurrentTime(), CurrentTime = GetCurrentTime();
+    float ElapsedPercentage = (CurrentTime-StartTime)/AnimDuration;
+    
+    int i;
+    SizeF BankLocation = GetCardOnTableLocation(0);
+    int Pool, Card;
+    
+    while (CurrentTime < StartTime + AnimDuration)
+    {
+        ClearScreen();
+        DrawBackground();
+        DrawFoldedAlpha(0, BankLocation.X, BankLocation.Y, (float)GetConfig(CardTranslucency)/255.0);
+        DrawUI();
+        DrawStatus();
+        DrawXPlayerCards(Turn, CardPlace);
+        
+        CurrentLocation.X = Source.X + (Destination.X - Source.X)*ElapsedPercentage;
+        CurrentLocation.Y = Source.Y + (Destination.Y - Source.Y)*ElapsedPercentage;
+        DrawCard(Turn, CardPlace, CurrentLocation.X, CurrentLocation.Y);
+        
+        UpdateScreen();
+        
+        CurrentTime = GetCurrentTime();
+        ElapsedPercentage = (CurrentTime-StartTime)/AnimDuration;
+    }
+    
+    StartTime = GetCurrentTime();
+    CurrentTime = GetCurrentTime();
+    ElapsedPercentage = (CurrentTime-StartTime)/AnimDuration;
+    
+    GetCardHandle(Turn, CardPlace, &Pool, &Card);
+    CardLocations[Pool][Card].Y = ((FRand()*12.0-6.0)+(6 + 466*i))/600.0;
+    Destination.X = CardLocations[Pool][Card].X;
+    Destination.Y = CardLocations[Pool][Card].Y;
+    
+    while (CurrentTime < StartTime + AnimDuration)
+    {
+        ClearScreen();
+        DrawBackground();
+        DrawFoldedAlpha(0, BankLocation.X, BankLocation.Y, (float)GetConfig(CardTranslucency)/255.0);
+        DrawUI();
+        DrawStatus();
+        DrawXPlayerCards(Turn, CardPlace);
+        DrawCard(Turn, CardPlace, Destination.X, Destination.Y);
+        
+        CurrentLocation.X = BankLocation.X + (Destination.X - BankLocation.X)*ElapsedPercentage;
+        CurrentLocation.Y = BankLocation.Y + (Destination.Y - BankLocation.Y)*ElapsedPercentage;
+        DrawFolded(Turn, CurrentLocation.X, CurrentLocation.Y);
+        
+        UpdateScreen();
+        
+        CurrentTime = GetCurrentTime();
+        ElapsedPercentage = (CurrentTime-StartTime)/AnimDuration;
+    }
+    
+    CardInTransit = -1;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+
+/**
+ * Deduces the location of a given card on the table. They are all fitted inside
+ * a bounding box.
+ * This could be precached, if it takes too long.
+ */
+SizeF GetCardOnTableLocation(int CardSlot)
+{
+    int i;
+    SizeF Result;
+    //GEm: Bounding box: 15% margin from left and right, 25% from top and bottom
+    
+    //GEm: Figure out how many cards fit the bounding box
+    //GEm: Good thing that int = float in C means int = floor(float)!
+    float CardWidth = 192*GetDrawScale()/GetConfig(ResolutionX);
+    float CardHeight = 256*GetDrawScale()/GetConfig(ResolutionY);
+    int CardsX = 0.7/CardWidth;
+    int CardsY = 0.5/CardHeight;
+    float CombinedCardWidth = CardWidth*CardsX;
+    float CombinedCardHeight = CardHeight*CardsY;
+    float SpacingX = (0.7-CombinedCardWidth)/(CardsX-1);
+    float SpacingY = (0.5-CombinedCardHeight)/(CardsY+1);
+    
+    for (i=0; i<CardsY; i++)
+    {
+        if (CardSlot/(CardsX*(i+1)) > 0) //GEm: Does not fit to this line!
+            continue;
+        
+        CardSlot -= CardsX*i;
+        Result.X = SpacingX*(CardSlot+1-1)+CardWidth*CardSlot+0.15;
+        Result.Y = SpacingY*(i+1)+CardHeight*i+0.25;
+        return Result;
+    }
+    printf("GetCardOnTableLocation: Error: Cards do not fit on the table!");
+    return Result;
+}
 
 /**
  * Returns the element draw size depending on the currently selected

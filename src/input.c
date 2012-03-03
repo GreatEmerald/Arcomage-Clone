@@ -66,8 +66,7 @@ void DoGame()
 
     while (!IsVictorious(0) && !IsVictorious(1))
     {
-        DrawStaticScene();
-        DrawAllPlayerCards();
+        DrawScene();
         UpdateScreen();
 
         while (SDL_PollEvent(&event));//GE: Delete all events from the event queue before our turn.
@@ -135,6 +134,7 @@ void DoGame()
     
     SDL_Delay(1000);
     
+    printf("DoGame(): Info: Game ended: Red gets %d, blue gets %d!\n", IsVictorious(0), IsVictorious(1));
     /*if (IsVictorious(0) && IsVictorious(1)) //GEm: TODO: Message boxes and sound
     {
         DialogBox(DLGWINNER,"Draw!");

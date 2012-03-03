@@ -43,6 +43,7 @@ void Init()
     InitTTF();
     
     SetPlayCardAnimation(&PlayCardAnimation);
+    SetPlayCardPostAnimation(&PlayCardPostAnimation);
     
     initGame(); //Init a 1vs1 game, will choose player types later
 }

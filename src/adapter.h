@@ -55,8 +55,8 @@ enum ColourTypes {
 
 void SetPlayerInfo(int PlayerNum, char* Name, char AI);
 void SetSoundPlay(void (*SoundPlay) (int));
-void SetRedrawScreen(void (*RedrawScreen) () );
-void SetPlayCardAnimation(void (*PlayCardAnimation) (int, int) );
+void SetPlayCardPostAnimation(void (*PlayCardPostAnimation) (int) );
+void SetPlayCardAnimation(void (*PlayCardAnimation) (int, char, char) );
 int GetConfig(int Type);
 char* GetPlayerName(int Who);
 char GetIsAI(int Who);

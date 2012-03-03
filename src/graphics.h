@@ -70,7 +70,9 @@ typedef struct S_CachedCard
 CachedCard** CardCache;
 SizeF** CardLocations; //GE: Where on the screen all our cards are.
 
-CardHandle* PlayedCards; //GEm: Cards that are displayed on screen after they were played.
+CardHandle* CardsOnTable; //GEm: Cards that are displayed on screen after they were played.
+int CardsOnTableSize;
+char CardInTransit; //GEm: If (-1) and which card is in transit.
 
 OpenGLTexture* PictureFileCache;
 int PictureFileCacheSize;
@@ -88,7 +90,7 @@ void FillRect(int x,int y,int w,int h,Uint8 r,Uint8 g,Uint8 b);
 void DrawMenuItem(int Type, char Lit);
 int Menu();
 void DrawBackground();
-void DrawStaticScene();
+void DrawScene();
 void DrawLogo();
 void DrawCard(char Player, char Number, float X, float Y);
 void DrawCardAlpha(char Player, char Number, float X, float Y, float Alpha);
