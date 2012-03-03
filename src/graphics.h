@@ -77,8 +77,11 @@ char CardInTransit; //GEm: If (-1) and which card is in transit.
 OpenGLTexture* PictureFileCache;
 int PictureFileCacheSize;
 
+const int CPUWAIT; //DEBUG
+
 void PrecacheCards();
 void PrecachePictures(int NumPools, int* NumCards);
+void InitCardLocations(int NumPlayers);
 
 void Graphics_Init();
 void Graphics_Quit();
@@ -98,10 +101,14 @@ void DrawAllPlayerCards();
 void DrawXPlayerCards(int PlayerNum, int CardNum);
 void DrawFoldedAlpha(int Team, float X, float Y, float Alpha);
 void DrawFolded(int Team, float X, float Y);
+void DrawCardsOnTable();
 void DrawSmallNumber(int Number, SizeF Destination, SizeF BoundingBox);
 void DrawMediumNumbers(int Player);
 void DrawBigNumbers(int Player);
 void DrawStatus();
+void PlayCardAnimation(int CardPlace, char bDiscarded, char bSameTurn);
+void PlayCardPostAnimation(int CardPlace);
+SizeF GetCardOnTableLocation(int CardSlot);
 char *DialogBox(int type,const char *fmt,...);
 int InRect(int x, int y, int x1, int y1, int x2, int y2);
 float FInRect(float x, float y, float x1, float y1, float x2, float y2);

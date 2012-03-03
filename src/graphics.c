@@ -218,7 +218,7 @@ void InitCardLocations(int NumPlayers)
     int i, n;
     int NumCards = GetConfig(CardsInHand);
     float DrawScale = GetDrawScale();
-    float CardWidth = NumCards*192*DrawScale;
+    float CardWidth = NumCards*192*DrawScale/GetConfig(ResolutionX);
     float Spacing = (1.0-CardWidth)/(NumCards+1);
     
     CardLocations = (SizeF**) malloc(NumPlayers * sizeof(SizeF*));
@@ -227,8 +227,8 @@ void InitCardLocations(int NumPlayers)
         CardLocations[i] = (SizeF*) malloc(NumCards * sizeof(SizeF));
         for (n=0; n < NumCards; n++)
         {
-            CardLocations[i][n].X = Spacing*(n+1)+192*DrawScale*n;
-            CardLocations[i][n].Y = ((FRand()*12.0-6.0)+(6 + 466*i))/600.0;
+            CardLocations[i][n].X = Spacing*(n+1)+192*DrawScale*n/GetConfig(ResolutionX);
+            CardLocations[i][n].Y = ((FRand()*12.0-6.0)+(6 + 466*!i))/600.0; //GEm: TODO: Implement more than 2 players - how to solve this?
         }
     }
     
@@ -252,7 +252,9 @@ void Graphics_Quit()
 	for (i=0;i<GFX_CNT;i++)
 		FreeTextures(GfxData[i]);
     
-    free(CardsOnTable);
+    printf("Freeing cards on the table...\n");
+    if (CardsOnTableSize > 0)
+        free(CardsOnTable);
 }
 
 /**
@@ -508,7 +510,6 @@ void DrawXPlayerCards(int PlayerNum, int CardNum)
                 DrawCard(n, i, CardLocations[n][i].X, CardLocations[n][i].Y);
 }
 
-
 void DrawFoldedAlpha(int Team, float X, float Y, float Alpha)
 {
     SDL_Rect DeckPosition;
@@ -539,6 +540,18 @@ void DrawDiscard(int X, int Y)
     DeckPosition.w = ScreenPosition.w; DeckPosition.h = ScreenPosition.h;
     
     //SDL_BlitSurface(GfxData[DECK],&DeckPosition,GfxData[SCREEN],&ScreenPosition);
+}
+
+void DrawCardsOnTable()
+{
+    int i;
+    SizeF Destination;
+    
+    for (i=0; i<CardsOnTableSize; i++)
+    {
+        Destination = GetCardOnTableLocation(i+1);
+        DrawHandleCardAlpha(CardsOnTable[i].Pool, CardsOnTable[i].Card, Destination.X, Destination.Y, GetConfig(CardTranslucency)/255.0);
+    }
 }
 
 /**
@@ -1047,7 +1060,10 @@ void DrawScene()
         DrawXPlayerCards(Turn, CardInTransit);
     }
     else
+    {
+        DrawCardsOnTable();
         DrawAllPlayerCards();
+    }
 }
 
 void DrawLogo()
@@ -1072,9 +1088,9 @@ void PlayCardAnimation(int CardPlace, char bDiscarded, char bSameTurn)
     
     SizeF Destination; Destination.X = 0.5-192*GetDrawScale()/2/800.0; Destination.Y = 0.5-256*GetDrawScale()/2/600.0;
     SizeF CurrentLocation;
-    long long AnimDuration = 1.5*FloatToHnsecs;
+    long long AnimDuration = 15*FloatToHnsecs;
     long long StartTime = GetCurrentTime(), CurrentTime = GetCurrentTime();
-    float ElapsedPercentage = (CurrentTime-StartTime)/AnimDuration;
+    float ElapsedPercentage = (CurrentTime-StartTime)/(float)AnimDuration;
     
     int i;
     SizeF BankLocation = GetCardOnTableLocation(0);
@@ -1107,16 +1123,17 @@ void PlayCardAnimation(int CardPlace, char bDiscarded, char bSameTurn)
         DrawCard(Turn, CardPlace, CurrentLocation.X, CurrentLocation.Y);
         
         UpdateScreen();
+        SDL_Delay(10);
         
         CurrentTime = GetCurrentTime();
-        ElapsedPercentage = (CurrentTime-StartTime)/AnimDuration;
+        ElapsedPercentage = (CurrentTime-StartTime)/(float)AnimDuration;
     }
     
     CardInTransit = CardPlace;
     if (!bSameTurn) //GEm: New turn
     {
         if (CardsOnTable == NULL || CardsOnTableSize > 1) //GEm: Alternatively, use CardsOnTableMax and CardsOnTableSize to cut down on reallocation and increase RAM usage
-            CardsOnTable = (CardHandle*) realloc(CardsOnTable, sizeof(CardHandle);
+            CardsOnTable = (CardHandle*) realloc(CardsOnTable, sizeof(CardHandle));
         CardsOnTableSize = 1;
         GetCardHandle(Turn, CardPlace, &(CardsOnTable[0].Pool), &(CardsOnTable[0].Card));
     }
@@ -1126,6 +1143,8 @@ void PlayCardAnimation(int CardPlace, char bDiscarded, char bSameTurn)
         CardsOnTable = (CardHandle*) realloc(CardsOnTable, CardsOnTableSize*sizeof(CardHandle)); //GEm: Hm, there is no way to find the length of a pointer array, yet realloc does it just fine?..
         GetCardHandle(Turn, CardPlace, &(CardsOnTable[CardsOnTableSize-1].Pool), &(CardsOnTable[CardsOnTableSize-1].Card));
     }
+    
+    SDL_Delay(310);
 }
 
 /**
@@ -1137,17 +1156,17 @@ void PlayCardPostAnimation(int CardPlace)
     const int FloatToHnsecs = 1000000;
     
     SizeF Source; Source.X = 0.5-192*GetDrawScale()/2/800.0; Source.Y = 0.5-256*GetDrawScale()/2/600.0;
-    SizeF Destination = GetCardOnTableLocation(CardsOnTableSize-1);
+    SizeF Destination = GetCardOnTableLocation(CardsOnTableSize);
     SizeF CurrentLocation;
-    long long AnimDuration = 1.5*FloatToHnsecs;
+    long long AnimDuration = 15*FloatToHnsecs;
     long long StartTime = GetCurrentTime(), CurrentTime = GetCurrentTime();
-    float ElapsedPercentage = (CurrentTime-StartTime)/AnimDuration;
+    float ElapsedPercentage = (CurrentTime-StartTime)/(float)AnimDuration;
     
     int i;
     SizeF BankLocation = GetCardOnTableLocation(0);
     int Pool, Card;
     
-    while (CurrentTime < StartTime + AnimDuration)
+    while (CurrentTime < StartTime + AnimDuration) //GEm: Move transient card to the table
     {
         ClearScreen();
         DrawBackground();
@@ -1163,23 +1182,24 @@ void PlayCardPostAnimation(int CardPlace)
         UpdateScreen();
         
         CurrentTime = GetCurrentTime();
-        ElapsedPercentage = (CurrentTime-StartTime)/AnimDuration;
+        ElapsedPercentage = (CurrentTime-StartTime)/(float)AnimDuration;
     }
     
     StartTime = GetCurrentTime();
     CurrentTime = GetCurrentTime();
-    ElapsedPercentage = (CurrentTime-StartTime)/AnimDuration;
+    ElapsedPercentage = (CurrentTime-StartTime)/(float)AnimDuration;
     
     GetCardHandle(Turn, CardPlace, &Pool, &Card);
     CardLocations[Pool][Card].Y = ((FRand()*12.0-6.0)+(6 + 466*i))/600.0;
-    Destination.X = CardLocations[Pool][Card].X;
-    Destination.Y = CardLocations[Pool][Card].Y;
+    Destination.X = CardLocations[Turn][CardPlace].X;
+    Destination.Y = CardLocations[Turn][CardPlace].Y;
     
-    while (CurrentTime < StartTime + AnimDuration)
+    while (CurrentTime < StartTime + AnimDuration) //GEm: Move a folded card from bank to hand
     {
         ClearScreen();
         DrawBackground();
         DrawFoldedAlpha(0, BankLocation.X, BankLocation.Y, (float)GetConfig(CardTranslucency)/255.0);
+        DrawCardsOnTable();
         DrawUI();
         DrawStatus();
         DrawXPlayerCards(Turn, CardPlace);
@@ -1192,7 +1212,7 @@ void PlayCardPostAnimation(int CardPlace)
         UpdateScreen();
         
         CurrentTime = GetCurrentTime();
-        ElapsedPercentage = (CurrentTime-StartTime)/AnimDuration;
+        ElapsedPercentage = (CurrentTime-StartTime)/(float)AnimDuration;
     }
     
     CardInTransit = -1;

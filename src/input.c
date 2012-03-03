@@ -62,7 +62,7 @@ void DoGame()
 {
     int i, n;
     int crd,netcard;
-    char bDiscarded=0;
+    char bDiscarded=0, bAllowedToPlay=0;
 
     while (!IsVictorious(0) && !IsVictorious(1))
     {
@@ -91,9 +91,8 @@ void DoGame()
         } */
         else
         {
-            if (!SDL_PollEvent(&event))
-                continue;
-            SDL_Delay(0); //GEm: HACK
+            while (!SDL_PollEvent(&event))
+                SDL_Delay(0); //GEm: HACK
             if (event.type == SDL_KEYUP && event.key.keysym.sym == SDLK_ESCAPE) //GEm: Return if Esc is pressed.
                 return;
             /*if (event.type == SDL_KEYDOWN && event.key.keysym.sym == SDLK_b) //GE: Keeping as "down" since it's urgent ;)
@@ -115,16 +114,24 @@ void DoGame()
             bDiscarded = (event.button.button == 2) || (event.button.button == 3);
             for (i=0; i<GetConfig(CardsInHand); i++)
             {
-                if (InRect(event.button.x,event.button.y, CardLocations[Turn][i].X, CardLocations[Turn][i].Y,
-                    (CardLocations[Turn][i].X+94)/600.0, (CardLocations[Turn][i].Y+128)/600.0)
+                printf("DEBUG: DoGame: FInRect(%f, %f, %f, %f, %f, %f)\n", (float)event.button.x/GetConfig(ResolutionX), (float)event.button.y/GetConfig(ResolutionY), CardLocations[Turn][i].X, CardLocations[Turn][i].Y, CardLocations[Turn][i].X+94/600.0, CardLocations[Turn][i].Y+128/600.0);
+                //printf("DEBUG: DoGame: InRect %d\n", InRect(event.button.x,event.button.y, CardLocations[Turn][i].X, CardLocations[Turn][i].Y, (CardLocations[Turn][i].X+94)/600.0, (CardLocations[Turn][i].Y+128)/600.0));
+                if (FInRect((float)event.button.x/GetConfig(ResolutionX), (float)event.button.y/GetConfig(ResolutionY),
+                    CardLocations[Turn][i].X, CardLocations[Turn][i].Y,
+                    CardLocations[Turn][i].X+94/600.0, CardLocations[Turn][i].Y+128/600.0)
                     &&  (bDiscarded || GetCanPlayCard(Turn, i, bDiscarded)))
                 {
-                    crd=i;
+                    crd=i; printf("DEBUG: DoGame: Played card in hand %d\n", crd);
+                    bAllowedToPlay = 1;
                     break;
                 }
             }
             //netcard = Player[turn].Hand[crd];//GEm: TODO: Netplay
-            PlayCard(crd, bDiscarded);
+            if (bAllowedToPlay)
+            {
+                ExecutePlayCard(crd, bDiscarded);
+                bAllowedToPlay = 0;
+            }
             
             /*if (netplayer!=-1)
                 NetLocPlay(crd,discrd,netcard);*/ //GEm: TODO: Netplay

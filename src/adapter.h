@@ -71,6 +71,7 @@ char***** GetCardDescriptionWords(int* NumPools, int** NumSentences, int*** NumL
 char*** GetCardTitleWords();
 void initGame();
 char* GetFilePath(char* FileName);
+char ExecutePlayCard(int CardPlace, char bDiscarded);
 float FRand();
 long long GetCurrentTime();
 
