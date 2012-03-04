@@ -1072,6 +1072,7 @@ void DrawScene()
     DrawStatus();
     if (CardInTransit > -1)
     {
+        DrawXCardsOnTable();
         SizeF TransitingCardLocation;
         TransitingCardLocation.X = 0.5-192*GetDrawScale()/2/800.0;
         TransitingCardLocation.Y = 0.5-256*GetDrawScale()/2/600.0;
@@ -1107,7 +1108,7 @@ void PlayCardAnimation(int CardPlace, char bDiscarded, char bSameTurn)
     
     SizeF Destination; Destination.X = 0.5-192*GetDrawScale()/2/800.0; Destination.Y = 0.5-256*GetDrawScale()/2/600.0;
     SizeF CurrentLocation;
-    long long AnimDuration = 15*FloatToHnsecs;
+    long long AnimDuration = 5*FloatToHnsecs;
     long long StartTime = GetCurrentTime(), CurrentTime = GetCurrentTime();
     float ElapsedPercentage = (CurrentTime-StartTime)/(float)AnimDuration;
     
@@ -1164,8 +1165,6 @@ void PlayCardAnimation(int CardPlace, char bDiscarded, char bSameTurn)
         CardsOnTable = (CardHandle*) realloc(CardsOnTable, CardsOnTableSize*sizeof(CardHandle)); //GEm: Hm, there is no way to find the length of a pointer array, yet realloc does it just fine?..
         GetCardHandle(Turn, CardPlace, &(CardsOnTable[CardsOnTableSize-1].Pool), &(CardsOnTable[CardsOnTableSize-1].Card));
     }
-    
-    SDL_Delay(310);
 }
 
 /**
@@ -1174,12 +1173,16 @@ void PlayCardAnimation(int CardPlace, char bDiscarded, char bSameTurn)
  */ 
 void PlayCardPostAnimation(int CardPlace)
 {
+    DrawScene();
+    UpdateScreen();
+    SDL_Delay(500);
+    
     const int FloatToHnsecs = 1000000;
     
     SizeF Source; Source.X = 0.5-192*GetDrawScale()/2/800.0; Source.Y = 0.5-256*GetDrawScale()/2/600.0;
     SizeF Destination = GetCardOnTableLocation(CardsOnTableSize);
     SizeF CurrentLocation;
-    long long AnimDuration = 15*FloatToHnsecs;
+    long long AnimDuration = 5*FloatToHnsecs;
     long long StartTime = GetCurrentTime(), CurrentTime = GetCurrentTime();
     float ElapsedPercentage = (CurrentTime-StartTime)/(float)AnimDuration;
     
