@@ -114,15 +114,13 @@ void DoGame()
             bDiscarded = (event.button.button == 2) || (event.button.button == 3);
             for (i=0; i<GetConfig(CardsInHand); i++)
             {
-                printf("DEBUG: DoGame: FInRect(%f, %f, %f, %f, %f, %f)\n", (float)event.button.x/GetConfig(ResolutionX), (float)event.button.y/GetConfig(ResolutionY), CardLocations[Turn][i].X, CardLocations[Turn][i].Y, CardLocations[Turn][i].X+94/600.0, CardLocations[Turn][i].Y+128/600.0);
-                //printf("DEBUG: DoGame: InRect %d\n", InRect(event.button.x,event.button.y, CardLocations[Turn][i].X, CardLocations[Turn][i].Y, (CardLocations[Turn][i].X+94)/600.0, (CardLocations[Turn][i].Y+128)/600.0));
                 if (FInRect((float)event.button.x/GetConfig(ResolutionX), (float)event.button.y/GetConfig(ResolutionY),
                     CardLocations[Turn][i].X, CardLocations[Turn][i].Y,
                     CardLocations[Turn][i].X+94/600.0, CardLocations[Turn][i].Y+128/600.0)
-                    &&  (bDiscarded || GetCanPlayCard(Turn, i, bDiscarded)))
+                    /*&&  GetCanPlayCard(Turn, i, bDiscarded)*/)
                 {
-                    crd=i; printf("DEBUG: DoGame: Played card in hand %d\n", crd);
-                    bAllowedToPlay = 1;
+                    crd=i;
+                    bAllowedToPlay = 1; //GEm: This only checks for special conditions, not resources!
                     break;
                 }
             }

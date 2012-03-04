@@ -244,7 +244,7 @@ void Graphics_Quit()
     free(CardLocations);
     
     //GEm: TODO: Free CardCache and all its textures
-    
+    printf("DEBUG: Graphics_Quit: Freeing...\n");
     for (i=0; i<PictureFileCacheSize; i++)
         FreeTextures(PictureFileCache[i].Texture);
     free(PictureFileCache);
@@ -252,7 +252,6 @@ void Graphics_Quit()
 	for (i=0;i<GFX_CNT;i++)
 		FreeTextures(GfxData[i]);
     
-    printf("Freeing cards on the table...\n");
     if (CardsOnTableSize > 0)
         free(CardsOnTable);
 }
@@ -505,9 +504,14 @@ void DrawXPlayerCards(int PlayerNum, int CardNum)
     int i, n;
     
     for (n=0; n<2; n++) //GEm: TODO More than 2 players
+    {
         for (i=0; i<GetConfig(CardsInHand); i++)
-            if (n != PlayerNum && i != CardNum)
-                DrawCard(n, i, CardLocations[n][i].X, CardLocations[n][i].Y);
+        {
+            if (n == PlayerNum && i == CardNum)
+                continue;
+            DrawCard(n, i, CardLocations[n][i].X, CardLocations[n][i].Y);
+        }
+    }
 }
 
 void DrawFoldedAlpha(int Team, float X, float Y, float Alpha)
@@ -548,6 +552,21 @@ void DrawCardsOnTable()
     SizeF Destination;
     
     for (i=0; i<CardsOnTableSize; i++)
+    {
+        Destination = GetCardOnTableLocation(i+1);
+        DrawHandleCardAlpha(CardsOnTable[i].Pool, CardsOnTable[i].Card, Destination.X, Destination.Y, GetConfig(CardTranslucency)/255.0);
+    }
+}
+
+/**
+ * Draw the cards on table, except for the last one.
+ */ 
+void DrawXCardsOnTable()
+{
+    int i;
+    SizeF Destination;
+    
+    for (i=0; i<CardsOnTableSize-1; i++)
     {
         Destination = GetCardOnTableLocation(i+1);
         DrawHandleCardAlpha(CardsOnTable[i].Pool, CardsOnTable[i].Card, Destination.X, Destination.Y, GetConfig(CardTranslucency)/255.0);
@@ -1111,6 +1130,8 @@ void PlayCardAnimation(int CardPlace, char bDiscarded, char bSameTurn)
                 DrawHandleCardAlpha(CardsOnTable[i].Pool, CardsOnTable[i].Card, CurrentLocation.X, CurrentLocation.Y, (1.0-ElapsedPercentage)*(GetConfig(CardTranslucency)/255.0));
             }
         }
+        else
+            DrawCardsOnTable();
         
         DrawFoldedAlpha(0, BankLocation.X, BankLocation.Y, (float)GetConfig(CardTranslucency)/255.0);
         DrawUI();
@@ -1162,24 +1183,26 @@ void PlayCardPostAnimation(int CardPlace)
     long long StartTime = GetCurrentTime(), CurrentTime = GetCurrentTime();
     float ElapsedPercentage = (CurrentTime-StartTime)/(float)AnimDuration;
     
-    int i;
+    //int i;
     SizeF BankLocation = GetCardOnTableLocation(0);
-    int Pool, Card;
+    //int Pool, Card;
     
     while (CurrentTime < StartTime + AnimDuration) //GEm: Move transient card to the table
     {
         ClearScreen();
         DrawBackground();
-        DrawFoldedAlpha(0, BankLocation.X, BankLocation.Y, (float)GetConfig(CardTranslucency)/255.0);
+        DrawFoldedAlpha(0, BankLocation.X, BankLocation.Y, GetConfig(CardTranslucency)/255.0);
+        DrawXCardsOnTable();
         DrawUI();
         DrawStatus();
         DrawXPlayerCards(Turn, CardPlace);
         
         CurrentLocation.X = Source.X + (Destination.X - Source.X)*ElapsedPercentage;
         CurrentLocation.Y = Source.Y + (Destination.Y - Source.Y)*ElapsedPercentage;
-        DrawCard(Turn, CardPlace, CurrentLocation.X, CurrentLocation.Y);
+        DrawCardAlpha(Turn, CardPlace, CurrentLocation.X, CurrentLocation.Y, (GetConfig(CardTranslucency)/255.0-1.0)*ElapsedPercentage+1.0); //GEm: (Alpha-1)*x+1=f(x)
         
         UpdateScreen();
+        SDL_Delay(10);
         
         CurrentTime = GetCurrentTime();
         ElapsedPercentage = (CurrentTime-StartTime)/(float)AnimDuration;
@@ -1189,8 +1212,8 @@ void PlayCardPostAnimation(int CardPlace)
     CurrentTime = GetCurrentTime();
     ElapsedPercentage = (CurrentTime-StartTime)/(float)AnimDuration;
     
-    GetCardHandle(Turn, CardPlace, &Pool, &Card);
-    CardLocations[Pool][Card].Y = ((FRand()*12.0-6.0)+(6 + 466*i))/600.0;
+    //GetCardHandle(Turn, CardPlace, &Pool, &Card);
+    CardLocations[Turn][CardPlace].Y = ((FRand()*12.0-6.0)+(6 + 466*!Turn))/600.0; //GEm: TODO implement more than 2 players
     Destination.X = CardLocations[Turn][CardPlace].X;
     Destination.Y = CardLocations[Turn][CardPlace].Y;
     
@@ -1203,13 +1226,14 @@ void PlayCardPostAnimation(int CardPlace)
         DrawUI();
         DrawStatus();
         DrawXPlayerCards(Turn, CardPlace);
-        DrawCard(Turn, CardPlace, Destination.X, Destination.Y);
+        //DrawCard(Turn, CardPlace, Destination.X, Destination.Y);
         
         CurrentLocation.X = BankLocation.X + (Destination.X - BankLocation.X)*ElapsedPercentage;
         CurrentLocation.Y = BankLocation.Y + (Destination.Y - BankLocation.Y)*ElapsedPercentage;
         DrawFolded(Turn, CurrentLocation.X, CurrentLocation.Y);
         
         UpdateScreen();
+        SDL_Delay(10);
         
         CurrentTime = GetCurrentTime();
         ElapsedPercentage = (CurrentTime-StartTime)/(float)AnimDuration;

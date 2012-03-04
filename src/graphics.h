@@ -102,6 +102,7 @@ void DrawXPlayerCards(int PlayerNum, int CardNum);
 void DrawFoldedAlpha(int Team, float X, float Y, float Alpha);
 void DrawFolded(int Team, float X, float Y);
 void DrawCardsOnTable();
+void DrawXCardsOnTable();
 void DrawSmallNumber(int Number, SizeF Destination, SizeF BoundingBox);
 void DrawMediumNumbers(int Player);
 void DrawBigNumbers(int Player);
