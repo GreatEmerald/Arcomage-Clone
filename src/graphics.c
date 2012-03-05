@@ -1006,23 +1006,25 @@ void DrawUI()
     
     //GE: Draw two towers
     ItemPosition.x = 1000; ItemPosition.y = 0;
-    ItemPosition.w = 68; ItemPosition.h = 94+200*((float)GetConfig(TowerLevels)/(float)GetConfig(TowerVictory));
+    ItemPosition.w = 68; ItemPosition.h = 94+200*(GetResource(0, RT_Tower)/(float)GetConfig(TowerVictory)); //GEm: TODO: Implement more than 2 players
     
     ScreenPosition.X = 92.0/800.0; ScreenPosition.Y = (433.0-(float)ItemPosition.h)/600.0;
     DrawTexture(GfxData[SPRITES], TextureCoordinates[SPRITES], ItemPosition, ScreenPosition, DrawScale*2.0*284.0/294.0);
     
     ItemPosition.x = 1068;
-    ScreenPosition.X = (800.0-ItemPosition.w-92.0)/800.0;
+    ItemPosition.h = 94+200*(GetResource(1, RT_Tower)/(float)GetConfig(TowerVictory));
+    ScreenPosition.X = (800.0-ItemPosition.w-92.0)/800.0; ScreenPosition.Y = (433.0-(float)ItemPosition.h)/600.0;
     DrawTexture(GfxData[SPRITES], TextureCoordinates[SPRITES], ItemPosition, ScreenPosition, DrawScale*2.0*284.0/294.0);
     
     //GE: Draw two walls
     ItemPosition.x = 1136; ItemPosition.y = 0;
-    ItemPosition.w = 45; ItemPosition.h = 38+200*((float)GetConfig(WallLevels)/(float)GetConfig(MaxWall));
+    ItemPosition.w = 45; ItemPosition.h = 38+200*(GetResource(0, RT_Wall)/(float)GetConfig(MaxWall));
     
     ScreenPosition.X = 162.0/800.0; ScreenPosition.Y = (433.0-(float)ItemPosition.h)/600.0;
     DrawTexture(GfxData[SPRITES], TextureCoordinates[SPRITES], ItemPosition, ScreenPosition, DrawScale*2.0*284.0/294.0);
     
-    ScreenPosition.X = (800.0-ItemPosition.w-162.0)/800.0;
+    ItemPosition.h = 38+200*(GetResource(1, RT_Wall)/(float)GetConfig(MaxWall));
+    ScreenPosition.X = (800.0-ItemPosition.w-162.0)/800.0; ScreenPosition.Y = (433.0-(float)ItemPosition.h)/600.0;
     DrawTexture(GfxData[SPRITES], TextureCoordinates[SPRITES], ItemPosition, ScreenPosition, DrawScale*2.0*284.0/294.0);
     
     //GE: Draw the tower/wall boxes
