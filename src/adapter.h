@@ -61,6 +61,7 @@ int GetConfig(int Type);
 char* GetPlayerName(int Who);
 char GetIsAI(int Who);
 char GetCanPlayCard(int Who, char CardNum, char bDiscarded);
+char GetCanAffordCard(int Who, char CardNum);
 int GetColourType(int Pool, int Card);
 void GetCardDBSize(int* NumPools, int** NumCards);
 void GetCardHandle(char PlayerNum, char PositionInHand, int* Pool, int* Card);

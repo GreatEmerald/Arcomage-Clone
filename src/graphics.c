@@ -495,8 +495,15 @@ void DrawAllPlayerCards()
     int i, n;
     
     for (n=0; n<2; n++) //GEm: TODO More than 2 players
+    {
         for (i=0; i<GetConfig(CardsInHand); i++)
-            DrawCard(n, i, CardLocations[n][i].X, CardLocations[n][i].Y);
+        {
+            if (GetCanAffordCard(n, i))
+                DrawCard(n, i, CardLocations[n][i].X, CardLocations[n][i].Y);
+            else
+                DrawCardAlpha(n, i, CardLocations[n][i].X, CardLocations[n][i].Y, GetConfig(CardTranslucency)/255.0);
+        }
+    }
 }
 
 void DrawXPlayerCards(int PlayerNum, int CardNum)
@@ -509,7 +516,10 @@ void DrawXPlayerCards(int PlayerNum, int CardNum)
         {
             if (n == PlayerNum && i == CardNum)
                 continue;
-            DrawCard(n, i, CardLocations[n][i].X, CardLocations[n][i].Y);
+            if (GetCanAffordCard(n, i))
+                DrawCard(n, i, CardLocations[n][i].X, CardLocations[n][i].Y);
+            else
+                DrawCardAlpha(n, i, CardLocations[n][i].X, CardLocations[n][i].Y, GetConfig(CardTranslucency)/255.0);
         }
     }
 }
