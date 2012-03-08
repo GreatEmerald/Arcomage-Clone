@@ -27,7 +27,7 @@ BFont_Info *font=NULL;
 BFont_Info *bigfont=NULL;
 
 int CardsOnTableSize=0;
-CardHandle* CardsOnTable=NULL;
+TableCard* CardsOnTable=NULL;
 char CardInTransit = -1;
 
 const int CPUWAIT=10; //DEBUG
@@ -543,17 +543,24 @@ inline void DrawFolded(int Team, float X, float Y)
     DrawFoldedAlpha(Team, X, Y, 1.0);
 }
 
-void DrawDiscard(int X, int Y)
+void DrawDiscard(float X, float Y)
 {
-    SDL_Rect ScreenPosition, DeckPosition;
+    SDL_Rect ItemPosition;
+    SizeF ScreenPosition = {X, Y};
+    float DrawScale = GetDrawScale();
+    SizeF TextureSize, CardSize;
     
-    ScreenPosition.x = X; ScreenPosition.y = Y;
-    ScreenPosition.w = 96; ScreenPosition.h = 128;
+    ItemPosition.x = 1259;  ItemPosition.w = 146;
+    ItemPosition.y = 0;     ItemPosition.h = 32;
     
-    DeckPosition.x = 0; DeckPosition.y = 256;
-    DeckPosition.w = ScreenPosition.w; DeckPosition.h = ScreenPosition.h;
+    TextureSize.X = 146*DrawScale/(float)GetConfig(ResolutionX);
+    TextureSize.Y = 32*DrawScale/(float)GetConfig(ResolutionX);
+    CardSize.X = 192*DrawScale/(float)GetConfig(ResolutionX);
+    CardSize.Y = 256*DrawScale/(float)GetConfig(ResolutionX);
+    ScreenPosition = CentreOnX(ScreenPosition, TextureSize, CardSize);
+    ScreenPosition.Y += (CardSize.Y - TextureSize.Y)/2.0;
     
-    //SDL_BlitSurface(GfxData[DECK],&DeckPosition,GfxData[SCREEN],&ScreenPosition);
+    DrawTexture(GfxData[SPRITES], TextureCoordinates[SPRITES], ItemPosition, ScreenPosition, DrawScale);
 }
 
 void DrawCardsOnTable()
@@ -564,7 +571,9 @@ void DrawCardsOnTable()
     for (i=0; i<CardsOnTableSize; i++)
     {
         Destination = GetCardOnTableLocation(i+1);
-        DrawHandleCardAlpha(CardsOnTable[i].Pool, CardsOnTable[i].Card, Destination.X, Destination.Y, GetConfig(CardTranslucency)/255.0);
+        DrawHandleCardAlpha(CardsOnTable[i].CH.Pool, CardsOnTable[i].CH.Card, Destination.X, Destination.Y, GetConfig(CardTranslucency)/255.0);
+        if (CardsOnTable[i].bDiscarded)
+            DrawDiscard(Destination.X, Destination.Y);
     }
 }
 
@@ -579,7 +588,9 @@ void DrawXCardsOnTable()
     for (i=0; i<CardsOnTableSize-1; i++)
     {
         Destination = GetCardOnTableLocation(i+1);
-        DrawHandleCardAlpha(CardsOnTable[i].Pool, CardsOnTable[i].Card, Destination.X, Destination.Y, GetConfig(CardTranslucency)/255.0);
+        DrawHandleCardAlpha(CardsOnTable[i].CH.Pool, CardsOnTable[i].CH.Card, Destination.X, Destination.Y, GetConfig(CardTranslucency)/255.0);
+        if (CardsOnTable[i].bDiscarded)
+            DrawDiscard(Destination.X, Destination.Y);
     }
 }
 
@@ -1088,7 +1099,13 @@ void DrawScene()
         SizeF TransitingCardLocation;
         TransitingCardLocation.X = 0.5-192*GetDrawScale()/2/800.0;
         TransitingCardLocation.Y = 0.5-256*GetDrawScale()/2/600.0;
-        DrawHandleCard(CardsOnTable[CardsOnTableSize-1].Pool, CardsOnTable[CardsOnTableSize-1].Card, TransitingCardLocation.X, TransitingCardLocation.Y);
+        if (bDiscardedInTransit)
+        {
+            DrawHandleCardAlpha(CardsOnTable[CardsOnTableSize-1].CH.Pool, CardsOnTable[CardsOnTableSize-1].CH.Card, TransitingCardLocation.X, TransitingCardLocation.Y, GetConfig(CardTranslucency)/255.0);
+            DrawDiscard(TransitingCardLocation.X, TransitingCardLocation.Y);
+        }
+        else
+            DrawHandleCard(CardsOnTable[CardsOnTableSize-1].CH.Pool, CardsOnTable[CardsOnTableSize-1].CH.Card, TransitingCardLocation.X, TransitingCardLocation.Y);
         DrawXPlayerCards(Turn, CardInTransit);
     }
     else
@@ -1140,7 +1157,7 @@ void PlayCardAnimation(int CardPlace, char bDiscarded, char bSameTurn)
                 CurrentLocation = GetCardOnTableLocation(i+1);
                 CurrentLocation.X = CurrentLocation.X + (BankLocation.X - CurrentLocation.X)*ElapsedPercentage;
                 CurrentLocation.Y = CurrentLocation.Y + (BankLocation.Y - CurrentLocation.Y)*ElapsedPercentage;
-                DrawHandleCardAlpha(CardsOnTable[i].Pool, CardsOnTable[i].Card, CurrentLocation.X, CurrentLocation.Y, (1.0-ElapsedPercentage)*(GetConfig(CardTranslucency)/255.0));
+                DrawHandleCardAlpha(CardsOnTable[i].CH.Pool, CardsOnTable[i].CH.Card, CurrentLocation.X, CurrentLocation.Y, (1.0-ElapsedPercentage)*(GetConfig(CardTranslucency)/255.0));
             }
         }
         else
@@ -1154,7 +1171,10 @@ void PlayCardAnimation(int CardPlace, char bDiscarded, char bSameTurn)
         //GEm: Draw the card in transit.
         CurrentLocation.X = CardLocations[Turn][CardPlace].X + (Destination.X - CardLocations[Turn][CardPlace].X)*ElapsedPercentage;
         CurrentLocation.Y = CardLocations[Turn][CardPlace].Y + (Destination.Y - CardLocations[Turn][CardPlace].Y)*ElapsedPercentage;
-        DrawCard(Turn, CardPlace, CurrentLocation.X, CurrentLocation.Y);
+        if (bDiscarded) //GEm: If it's discarded, draw it translucent from the get-go.
+            DrawCardAlpha(Turn, CardPlace, CurrentLocation.X, CurrentLocation.Y, (GetConfig(CardTranslucency)/255.0-1.0)*ElapsedPercentage+1.0);
+        else
+            DrawCard(Turn, CardPlace, CurrentLocation.X, CurrentLocation.Y);
         
         UpdateScreen();
         SDL_Delay(10);
@@ -1164,19 +1184,27 @@ void PlayCardAnimation(int CardPlace, char bDiscarded, char bSameTurn)
     }
     
     CardInTransit = CardPlace;
+    if (bDiscarded)
+        bDiscardedInTransit = 1;
+    else
+        bDiscardedInTransit = 0;
+        
     if (!bSameTurn) //GEm: New turn
     {
         if (CardsOnTable == NULL || CardsOnTableSize > 1) //GEm: Alternatively, use CardsOnTableMax and CardsOnTableSize to cut down on reallocation and increase RAM usage
-            CardsOnTable = (CardHandle*) realloc(CardsOnTable, sizeof(CardHandle));
+            CardsOnTable = (TableCard*) realloc(CardsOnTable, sizeof(TableCard));
         CardsOnTableSize = 1;
-        GetCardHandle(Turn, CardPlace, &(CardsOnTable[0].Pool), &(CardsOnTable[0].Card));
     }
     else
     {
         CardsOnTableSize++;
-        CardsOnTable = (CardHandle*) realloc(CardsOnTable, CardsOnTableSize*sizeof(CardHandle)); //GEm: Hm, there is no way to find the length of a pointer array, yet realloc does it just fine?..
-        GetCardHandle(Turn, CardPlace, &(CardsOnTable[CardsOnTableSize-1].Pool), &(CardsOnTable[CardsOnTableSize-1].Card));
+        CardsOnTable = (TableCard*) realloc(CardsOnTable, CardsOnTableSize*sizeof(TableCard)); //GEm: Hm, there is no way to find the length of a pointer array, yet realloc does it just fine?..
     }
+    GetCardHandle(Turn, CardPlace, &(CardsOnTable[CardsOnTableSize-1].CH.Pool), &(CardsOnTable[CardsOnTableSize-1].CH.Card));
+    if (bDiscarded)
+        CardsOnTable[CardsOnTableSize-1].bDiscarded = 1;
+    else
+        CardsOnTable[CardsOnTableSize-1].bDiscarded = 0;
 }
 
 /**
@@ -1214,7 +1242,13 @@ void PlayCardPostAnimation(int CardPlace)
         
         CurrentLocation.X = Source.X + (Destination.X - Source.X)*ElapsedPercentage;
         CurrentLocation.Y = Source.Y + (Destination.Y - Source.Y)*ElapsedPercentage;
-        DrawCardAlpha(Turn, CardPlace, CurrentLocation.X, CurrentLocation.Y, (GetConfig(CardTranslucency)/255.0-1.0)*ElapsedPercentage+1.0); //GEm: (Alpha-1)*x+1=f(x)
+        if (bDiscardedInTransit)
+        {
+            DrawCardAlpha(Turn, CardPlace, CurrentLocation.X, CurrentLocation.Y, GetConfig(CardTranslucency)/255.0);
+            DrawDiscard(CurrentLocation.X, CurrentLocation.Y);
+        }
+        else
+            DrawCardAlpha(Turn, CardPlace, CurrentLocation.X, CurrentLocation.Y, (GetConfig(CardTranslucency)/255.0-1.0)*ElapsedPercentage+1.0); //GEm: (Alpha-1)*x+1=f(x)
         
         UpdateScreen();
         SDL_Delay(10);
@@ -1255,6 +1289,7 @@ void PlayCardPostAnimation(int CardPlace)
     }
     
     CardInTransit = -1;
+    bDiscardedInTransit = 0;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -70,9 +70,14 @@ typedef struct S_CachedCard
 CachedCard** CardCache;
 SizeF** CardLocations; //GE: Where on the screen all our cards are.
 
-CardHandle* CardsOnTable; //GEm: Cards that are displayed on screen after they were played.
+typedef struct S_TableCard
+{
+	CardHandle CH; char bDiscarded;
+} TableCard;
+TableCard* CardsOnTable; //GEm: Cards that are displayed on screen after they were played.
 int CardsOnTableSize;
 char CardInTransit; //GEm: If (-1) and which card is in transit.
+char bDiscardedInTransit; //GEm: Whether the card in transit has been discarded.
 
 OpenGLTexture* PictureFileCache;
 int PictureFileCacheSize;
@@ -102,6 +107,7 @@ void DrawAllPlayerCards();
 void DrawXPlayerCards(int PlayerNum, int CardNum);
 void DrawFoldedAlpha(int Team, float X, float Y, float Alpha);
 void DrawFolded(int Team, float X, float Y);
+void DrawDiscard(float X, float Y);
 void DrawCardsOnTable();
 void DrawXCardsOnTable();
 void DrawSmallNumber(int Number, SizeF Destination, SizeF BoundingBox);
