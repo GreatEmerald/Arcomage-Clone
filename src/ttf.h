@@ -8,6 +8,7 @@ enum
     Font_Title = 0,
     Font_Description,
     Font_Name, //GEm: This is the font for the player's name.
+    Font_Message,
     Font_Count
 };
 
@@ -21,10 +22,14 @@ enum
 
 OpenGLTexture NumberCache[Numbers_Count][10];
 OpenGLTexture NameCache[2]; //GEm: FIXME - needs to be dynamic
+TTF_Font* Fonts[Font_Count]; //GE: Array of fonts in use.
+TTF_Font* NumberFonts[Numbers_Count]; //GE: Array of fonts that render numbers in use.
+GLuint** FontCache; //GE: An array of textures for quick rendering. Must match the CardDB[][] in D!
 
 void InitTTF();
 void QuitTTF();
 void DrawTextLine(char* text, SizeF location);
+void DrawCustomTextCentred(char* text, int FontType, SizeF BoxLocation, SizeF BoxSize);
 int FindOptimalFontSize();
 void PrecacheFonts();
 void PrecacheTitleText();

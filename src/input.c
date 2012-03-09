@@ -140,38 +140,43 @@ void DoGame()
     SDL_Delay(1000);
     
     printf("DoGame(): Info: Game ended: Red gets %d, blue gets %d!\n", IsVictorious(0), IsVictorious(1));
-    /*if (IsVictorious(0) && IsVictorious(1)) //GEm: TODO: Message boxes and sound
+    DrawScene();
+    if (IsVictorious(0) && IsVictorious(1))
     {
         DialogBox(DLGWINNER,"Draw!");
-        Sound_Play(VICTORY);
+        //Sound_Play(VICTORY); //GEm: TODO: Sound
     }
     else
     {
-        if (aiplayer!=-1 || netplayer!=-1)              // 1 local Player
+        if (GetIsAI(1))              // 1 local Player //GEm: TODO: more than 2 players
         {
-            i=aiplayer;if (i==-1) i=netplayer;i=!i;
-            if (Winner(i))
+            //i=aiplayer;if (i==-1) i=netplayer;i=!i; //GEm: TODO: Networking support
+            if (IsVictorious(0))
             {
-                if (Player[i].t>=TowerVictory)
+                if (GetResource(0, RT_Tower) >= GetConfig(TowerVictory))
                     DialogBox(DLGWINNER, "You win by a\ntower building victory!");
-                else if (Player[!i].t<=0)
+                else if (GetResource(1, RT_Tower) <= 0)
                     DialogBox(DLGWINNER, "You win by a tower\ndestruction victory!");
                 else DialogBox(DLGWINNER, "You win by a\nresource victory!");
-                Sound_Play(VICTORY);
+                //Sound_Play(VICTORY);
             }
             else
             {
-                if (Player[!i].t>=TowerVictory)
+                if (GetResource(1, RT_Tower) >= GetConfig(TowerVictory))
                     DialogBox(DLGLOOSER, "You lose by a\ntower building defeat!");
-                else if (Player[i].t<=0)
+                else if (GetResource(0, RT_Tower) <= 0)
                     DialogBox(DLGLOOSER, "You lose by a\ntower destruction defeat!");
                 else DialogBox(DLGLOOSER, "You lose by a\nresource defeat!");
-                Sound_Play(DEFEAT);
+                //Sound_Play(DEFEAT);
             }
         } else {                                         // 2 local Players
-            DialogBox(DLGWINNER,"Winner is\n%s !",Player[Winner(1)].Name);
-            Sound_Play(VICTORY);
+            if (IsVictorious(0))
+                DialogBox(DLGWINNER,"Winner is\n%s !", GetPlayerName(0));
+            else
+                DialogBox(DLGWINNER,"Winner is\n%s !", GetPlayerName(1));
+            //Sound_Play(VICTORY);
         }
-    }*/
+    }
+    UpdateScreen();
     WaitForInput();
 }

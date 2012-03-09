@@ -53,6 +53,7 @@ void Init()
  */ 
 void Quit()
 {
+    QuitTTF();
     Graphics_Quit();
     //Sound_Quit();
     rt_term(); //GE: Terminate D

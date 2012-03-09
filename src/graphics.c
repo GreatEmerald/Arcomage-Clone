@@ -1380,12 +1380,15 @@ int ValidInputChar(int c)
 
 char *DialogBox(int type,const char *fmt,...)
 {
-	SDL_Rect rect;
+	SizeF Position;
+    Size TextSize;
+    SizeF RelativeTextSize;
+    SizeF Resolution; Resolution.X = GetConfig(ResolutionX); Resolution.Y = GetConfig(ResolutionY);
 	char *val;
 	int vallen;
 	va_list args;
 	char *buf;
-	int i,h,cnt=0;
+	int i,cnt=0;
 	char *ptr[20];
 	char *p;
 
@@ -1406,32 +1409,24 @@ char *DialogBox(int type,const char *fmt,...)
 		}
 		p++;
 	}
-	rect.w=352;
-	rect.h=128;
-	rect.x=(GetConfig(ResolutionX)-rect.w) >> 1;
-	rect.y=(GetConfig(ResolutionY)-rect.h) >> 1;
-	//SDL_BlitSurface(GfxData[type],NULL,GfxData[SCREEN],&rect);//FIXME
-	rect.w-=4;
-	rect.h-=4;
-	rect.x+=2;
-	rect.y+=2;
+	Position.X = 0.5-TextureCoordinates[type].X/Resolution.X/2.0;
+    Position.Y = 0.5-TextureCoordinates[type].Y/Resolution.Y/2.0;
+	DrawTexture(GfxData[type], TextureCoordinates[type], AbsoluteTextureSize(TextureCoordinates[type]), Position, GetDrawScale()*2);
 	
-	if (type==DLGWINNER || type==DLGLOOSER)
-		BFont_SetCurrentFont(bigfont);
-	
-	h=BFont_FontHeight(BFont_GetCurrentFont());
-	/*for (i=0;i<cnt;i++)
-		BFont_CenteredPutString(GfxData[SCREEN],240-h*cnt/2+h*i,ptr[i]);
-	UpdateScreenRect(rect.x-2,rect.y-2,rect.w+4,rect.h+4);*///FIXME
-	
-	if (type==DLGWINNER || type==DLGLOOSER)
-		BFont_SetCurrentFont(font);
+	for (i=0;i<cnt;i++)
+    {
+		TTF_SizeText(Fonts[Font_Message], ptr[i], &(TextSize.X), &(TextSize.Y));
+        Position.X = 0.5-TextSize.X/Resolution.X/2.0;
+        Position.Y = 0.5-TextSize.Y/Resolution.Y*cnt/2.0+TextSize.Y/Resolution.Y*i;
+        RelativeTextSize.X = TextSize.X/Resolution.X; RelativeTextSize.Y = TextSize.Y/Resolution.Y;
+        DrawCustomTextCentred(ptr[i], Font_Message, Position, RelativeTextSize);
+    }
 
 	free(buf);
 
 	if (type!=DLGNETWORK) return NULL;
 
-	val[0]='_';val[1]=0;vallen=1;h=0;
+	/*val[0]='_';val[1]=0;vallen=1;h=0; //GE: TODO: Input
 
 	while (!h)
 	{
@@ -1440,14 +1435,14 @@ char *DialogBox(int type,const char *fmt,...)
 		rect.w=320;
 		rect.h=16;
 		//SDL_FillRect(GfxData[SCREEN],&rect,0);
-		i=BFont_TextWidth(val);
+		i=BFont_TextWidth(val);*/
 		/*if (i<312)
 			BFont_PutString(GfxData[SCREEN],164,276,val);
 		else
 			BFont_PutString(GfxData[SCREEN],164+(312-i),276,val);
 		SDL_UpdateRect(GfxData[SCREEN],160,272,320,16);*/ //FIXME 
 
-		while (event.type!=SDL_KEYDOWN)
+		/*while (event.type!=SDL_KEYDOWN)
 		{
 			SDL_PollEvent(&event);		// wait for keypress
 			SDL_Delay(CPUWAIT);
@@ -1475,13 +1470,13 @@ char *DialogBox(int type,const char *fmt,...)
 			}
 		}
 	}
-	if (h==2)
+	if (h==2)*/
 		return NULL;
-	else
+	/*else
 	{
 		val[vallen-1]=0;
 		return val;
-	}
+	}*/
 }
 
 int InRect(int x, int y, int x1, int y1, int x2, int y2)

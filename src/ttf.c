@@ -24,9 +24,6 @@ struct S_CardDescriptions
     int*** NumWords;
 };
 
-TTF_Font* Fonts[Font_Count]; //GE: Array of fonts in use.
-TTF_Font* NumberFonts[Numbers_Count]; //GE: Array of fonts that render numbers in use.
-GLuint** FontCache; //GE: An array of textures for quick rendering. Must match the CardDB[][] in D!
 struct S_CardDescriptions CardDescriptions;
 
 /**
@@ -42,7 +39,7 @@ void InitTTF()
     CardDescriptions.Text = GetCardDescriptionWords(&(CardDescriptions.NumPools), &(CardDescriptions.NumSentences), &(CardDescriptions.NumLines), &(CardDescriptions.NumWords));
     
     Fonts[Font_Description] = TTF_OpenFont(GetFilePath("fonts/FreeSans.ttf"), FindOptimalFontSize()); //GE: Make sure D is initialised first here.
-    //TTF_SetFontHinting(Fonts[Font_Description], TTF_HINTING_NORMAL);
+    Fonts[Font_Message] = TTF_OpenFont(GetFilePath("fonts/FreeSansBold.ttf"), (int)(GetDrawScale()*2*20));
     Fonts[Font_Title] = TTF_OpenFont(GetFilePath("fonts/FreeSans.ttf"), (int)(GetDrawScale()*2*10));
     Fonts[Font_Name] = TTF_OpenFont(GetFilePath("fonts/FreeMono.ttf"), (int)(GetDrawScale()*2*11));//7
     if (Fonts[Font_Description] == NULL)
@@ -80,7 +77,12 @@ void InitTTF()
 
 void QuitTTF()
 {
-    TTF_CloseFont(Fonts[Font_Description]);
+    int i;
+    
+    for (i=0; i<Font_Count; i++)
+        TTF_CloseFont(Fonts[i]);
+    for (i=0; i<Numbers_Count; i++)
+        TTF_CloseFont(NumberFonts[i]);
     TTF_Quit();
 }
 
@@ -101,6 +103,29 @@ void DrawTextLine(char* text, SizeF location)
     rect.w = w; rect.h = h;
     TextureSize.X = w; TextureSize.Y= h;
     DrawTexture(texture, TextureSize, rect, location, 1.0);
+
+	/* Clean up */
+	glDeleteTextures(1, &texture);
+}
+
+void DrawCustomTextCentred(char* text, int FontType, SizeF BoxLocation, SizeF BoxSize)
+{
+	SDL_Rect rect = {0, 0, 0, 0};
+	int w,h;
+	GLuint texture;
+    Size TextureSize;
+    SizeF RelativeSize;
+
+    SDL_Color Colour = {255, 255, 255};
+    texture = TextToTextureColour(Fonts[FontType], text, Colour);
+    
+    TTF_SizeText(Fonts[Font_Description], text, &w, &h);
+    rect.w = w; rect.h = h;
+    TextureSize.X = w; TextureSize.Y= h;
+    RelativeSize.X = w/(float)GetConfig(ResolutionX); RelativeSize.Y = h/(float)GetConfig(ResolutionY);
+    BoxLocation = CentreOnX(BoxLocation, RelativeSize, BoxSize);
+    
+    DrawTexture(texture, TextureSize, rect, BoxLocation, 1.0);
 
 	/* Clean up */
 	glDeleteTextures(1, &texture);
