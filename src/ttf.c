@@ -34,7 +34,7 @@ void InitTTF()
     int a, b, c, d;
     
     if (TTF_Init()) //GE: Abusing the fact that -1 is considered true
-        FatalError(TTF_GetError());
+        GeneralProtectionFault(TTF_GetError());
     
     CardDescriptions.Text = GetCardDescriptionWords(&(CardDescriptions.NumPools), &(CardDescriptions.NumSentences), &(CardDescriptions.NumLines), &(CardDescriptions.NumWords));
     
@@ -43,7 +43,7 @@ void InitTTF()
     Fonts[Font_Title] = TTF_OpenFont(GetFilePath("fonts/FreeSans.ttf"), (int)(GetDrawScale()*2*10));
     Fonts[Font_Name] = TTF_OpenFont(GetFilePath("fonts/FreeMono.ttf"), (int)(GetDrawScale()*2*11));//7
     if (Fonts[Font_Description] == NULL)
-        FatalError(TTF_GetError());
+        GeneralProtectionFault(TTF_GetError());
     
     NumberFonts[Numbers_Big] = TTF_OpenFont(GetFilePath("fonts/FreeMonoBold.ttf"), (int)(GetDrawScale()*2*27));//17
     NumberFonts[Numbers_Medium] = TTF_OpenFont(GetFilePath("fonts/FreeMonoBold.ttf"), (int)(GetDrawScale()*2*16));//10
@@ -242,7 +242,7 @@ void PrecacheTitleText()
 
 void PrecacheDescriptionText()
 {
-    Size CardSize = {(int)(GetDrawScale()*2*88), (int)(GetDrawScale()*2*53)};
+    Size CardSize; CardSize.X = (int)(GetDrawScale()*2*88); CardSize.Y = (int)(GetDrawScale()*2*53);
     int Pool, Sentence, Line, Word;
     int SpaceLength;
     int LineHeight; TTF_SizeText(Fonts[Font_Description], " ", &SpaceLength, &LineHeight);

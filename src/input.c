@@ -84,7 +84,7 @@ void DoGame()
 				PlayCard(i,discrd);
 			}
             else {
-                DialogBox(DLGERROR,"Server dropped connection ...");
+                DrawDialog(DLGERROR,"Server dropped connection ...");
                 WaitForInput();
                 return;
             }
@@ -143,7 +143,7 @@ void DoGame()
     DrawScene();
     if (IsVictorious(0) && IsVictorious(1))
     {
-        DialogBox(DLGWINNER,"Draw!");
+        DrawDialog(DLGWINNER,"Draw!");
         //Sound_Play(VICTORY); //GEm: TODO: Sound
     }
     else
@@ -154,26 +154,26 @@ void DoGame()
             if (IsVictorious(0))
             {
                 if (GetResource(0, RT_Tower) >= GetConfig(TowerVictory))
-                    DialogBox(DLGWINNER, "You win by a\ntower building victory!");
+                    DrawDialog(DLGWINNER, "You win by a\ntower building victory!");
                 else if (GetResource(1, RT_Tower) <= 0)
-                    DialogBox(DLGWINNER, "You win by a tower\ndestruction victory!");
-                else DialogBox(DLGWINNER, "You win by a\nresource victory!");
+                    DrawDialog(DLGWINNER, "You win by a tower\ndestruction victory!");
+                else DrawDialog(DLGWINNER, "You win by a\nresource victory!");
                 //Sound_Play(VICTORY);
             }
             else
             {
                 if (GetResource(1, RT_Tower) >= GetConfig(TowerVictory))
-                    DialogBox(DLGLOOSER, "You lose by a\ntower building defeat!");
+                    DrawDialog(DLGLOOSER, "You lose by a\ntower building defeat!");
                 else if (GetResource(0, RT_Tower) <= 0)
-                    DialogBox(DLGLOOSER, "You lose by a\ntower destruction defeat!");
-                else DialogBox(DLGLOOSER, "You lose by a\nresource defeat!");
+                    DrawDialog(DLGLOOSER, "You lose by a\ntower destruction defeat!");
+                else DrawDialog(DLGLOOSER, "You lose by a\nresource defeat!");
                 //Sound_Play(DEFEAT);
             }
         } else {                                         // 2 local Players
             if (IsVictorious(0))
-                DialogBox(DLGWINNER,"Winner is\n%s !", GetPlayerName(0));
+                DrawDialog(DLGWINNER,"Winner is\n%s !", GetPlayerName(0));
             else
-                DialogBox(DLGWINNER,"Winner is\n%s !", GetPlayerName(1));
+                DrawDialog(DLGWINNER,"Winner is\n%s !", GetPlayerName(1));
             //Sound_Play(VICTORY);
         }
     }

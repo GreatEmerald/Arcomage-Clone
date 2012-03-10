@@ -74,7 +74,7 @@ void initGame();
 char* GetFilePath(char* FileName);
 char ExecutePlayCard(int CardPlace, char bDiscarded);
 float FRand();
-long long GetCurrentTime();
+long long GetCurrentTimeD();
 
 //GEm: From cards.d
 int Turn;

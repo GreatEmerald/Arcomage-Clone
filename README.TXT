@@ -115,10 +115,15 @@ OMF/COFF issue is also why the tools are recommended there. Basic Utilities
 include ImpLib, which is used for building OMF .lib files from DLLs (note: for
 some insane reason, when using ImpLib, the output file goes first. See more
 here: http://www.digitalmars.com/ctg/implib.html). You wouldn't normally need
-this, however, unless you wish to add more libraries to the project. COFFImpLib
-is a different utility, and it's very useful - it converts COFF .lib files to
-OMF .lib files. That's the usual thing that you'd want to do if you want to add
-a library to the project. More info about it here:
+this, however, unless you wish to add specific libraries to the project, or
+update SDL_ttf. In case you do wish to update it, you need to create a .lib file
+out of the SDL_ttf DLL file by using this command:
+  implib /system SDL_ttf.conv.lib SDL_ttf.dll
+
+COFFImpLib is a different utility, and it's very useful - it converts COFF .lib
+files to OMF .lib files. That's the usual thing that you'd want to do if you
+want to add a library to the project (if that fails, try using implib above).
+More info about it here:
 http://www.digitalmars.com/ctg/coffimplib.html
 
 Now about Linux. If you don't know why you need GCC, GNU Make and libc6, then,

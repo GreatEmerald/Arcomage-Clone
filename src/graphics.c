@@ -10,6 +10,7 @@
 //#include "cards.h"
 //#include "common.h"
 //#include "config.h"
+#include "frontend.h"
 #include "graphics.h"
 #include "adapter.h"
 #include "opengl.h"
@@ -37,11 +38,11 @@ void Graphics_Init()
     char fullscreen = GetConfig(Fullscreen);
     
     if (SDL_Init(SDL_INIT_VIDEO|SDL_INIT_NOPARACHUTE)<0) //GE: NOPARACHUTE means no exception handling. Could be dangerous. Could be faster.
-	FatalError("Couldn't initialise SDL");
+	GeneralProtectionFault("Couldn't initialise SDL");
     SDL_WM_SetCaption("Arcomage Clone",NULL);
     SDL_GL_SetAttribute( SDL_GL_DOUBLEBUFFER, 1 ); //GE: Enable OpenGL double buffer support.
     if (!SDL_SetVideoMode(GetConfig(ResolutionX),GetConfig(ResolutionY),0,(fullscreen*SDL_FULLSCREEN)|SDL_OPENGL)) //GE: Enable OpenGL, because without it SDL is just plain bad.
-	FatalError("Couldn't initialise OpenGL");
+	GeneralProtectionFault("Couldn't initialise OpenGL");
     InitOpenGL();
     
     #ifdef linux
@@ -78,13 +79,13 @@ void Graphics_Init()
 
     numssmall=BFont_LoadFont(GetFilePath("nums_small.png"));
     if (!numssmall)
-	FatalError("Data file 'nums_small.png' is missing or corrupt.");
+	GeneralProtectionFault("Data file 'nums_small.png' is missing or corrupt.");
     bigfont=BFont_LoadFont(GetFilePath("bigfont.png"));
     if (!bigfont)
-	FatalError("Data file 'bigfont.png' is missing or corrupt.");
+	GeneralProtectionFault("Data file 'bigfont.png' is missing or corrupt.");
     font=BFont_LoadFont(GetFilePath("font.png"));
     if (!font)
-	FatalError("Data file 'font.png' is missing or corrupt.");
+	GeneralProtectionFault("Data file 'font.png' is missing or corrupt.");
     BFont_SetCurrentFont(font);*/
     
     InitCardLocations(2);
@@ -178,7 +179,7 @@ void PrecachePictures(int NumPools, int* NumCards)
             {
                 Surface = IMG_Load(PicturePaths[Pool][Card]);
                 if (!Surface)
-                    FatalError("File '%s' is missing or corrupt.", PicturePaths[Pool][Card]);
+                    GeneralProtectionFault("File '%s' is missing or corrupt.", PicturePaths[Pool][Card]);
                 PictureFileCache[CurrentElement].Texture = SurfaceToTexture(Surface);
                 PictureFileCache[CurrentElement].TextureSize.X = (*Surface).w;
                 PictureFileCache[CurrentElement].TextureSize.Y = (*Surface).h;
@@ -336,13 +337,13 @@ inline void UpdateScreenRect(int x1,int y1,int x2,int y2)
 	//SDL_UpdateRect(GfxData[SCREEN],x1,y1,x2,y2);
 }
 
-void FillRect(int x,int y,int w,int h,Uint8 r,Uint8 g,Uint8 b)
-{
-	printf("Warning: FillRect is deprecated!");
+//void FillRect(int x,int y,int w,int h,Uint8 r,Uint8 g,Uint8 b)
+//{
+//	printf("Warning: FillRect is deprecated!");
 	/*SDL_Rect rect;
 	rect.x=x;rect.y=y;rect.w=w;rect.h=h;
 	SDL_FillRect(GfxData[SCREEN],&rect,SDL_MapRGB(GfxData[SCREEN]->format,r,g,b));*/
-}
+//}
 
 void NewDrawCard(int C, int X, int Y, SDL_Surface* Sourface, Uint8 Alpha)//GE: SOURFACE! :(
 {
@@ -393,7 +394,7 @@ void DrawHandleCardAlpha(int Pool, int Card, float X, float Y, float Alpha)
     int Colour = GetColourType(Pool, Card);
     
     SDL_Rect ItemPosition;
-    SizeF ScreenPosition = {X, Y};
+    SizeF ScreenPosition; ScreenPosition.X = X; ScreenPosition.Y = Y;
     float DrawScale = GetDrawScale();
     
     //GEm: Draw background.
@@ -449,7 +450,7 @@ void DrawHandleCardAlpha(int Pool, int Card, float X, float Y, float Alpha)
             DrawTextureAlpha(CardCache[Pool][Card].PriceTexture[2].Texture, CardCache[Pool][Card].PriceTexture[2].TextureSize, ItemPosition, ScreenPosition, 1.0, Alpha);
             break;
         case CT_White:
-            FatalError("FIXME: White cards not yet supported!");
+            GeneralProtectionFault("FIXME: White cards not yet supported!");
             break;
         default: //GEm: Black and red cards, and anything else strange goes here.
             ItemPosition = AbsoluteTextureSize(CardCache[Pool][Card].PriceTexture[0].TextureSize);
@@ -464,8 +465,8 @@ void DrawHandleCardAlpha(int Pool, int Card, float X, float Y, float Alpha)
     ItemPosition = CardCache[Pool][Card].PictureCoords;
     BoundingBox.X = 88/800.0; BoundingBox.Y = 52/600.0;
     float CustomDrawScale = FMax(BoundingBox.X/(ItemPosition.w/ResX), BoundingBox.Y/(ItemPosition.h/ResY));
-    SizeF NewSize = {(ItemPosition.w/ResX)*CustomDrawScale, (ItemPosition.h/ResY)*CustomDrawScale};
-    SizeF DeltaSize = {NewSize.X-BoundingBox.X, NewSize.Y-BoundingBox.Y};
+    SizeF NewSize; NewSize.X = (ItemPosition.w/ResX)*CustomDrawScale; NewSize.Y = (ItemPosition.h/ResY)*CustomDrawScale;
+    SizeF DeltaSize; DeltaSize.X = NewSize.X-BoundingBox.X; DeltaSize.Y = NewSize.Y-BoundingBox.Y;
     ItemPosition.x += DeltaSize.X*ResX/2.0; ItemPosition.w -=  DeltaSize.X*ResX;
     ItemPosition.y += DeltaSize.Y*ResY/2.0; ItemPosition.h -=  DeltaSize.Y*ResY;
     ScreenPosition.X = X + 4/800.0; ScreenPosition.Y = Y + 19/600.0;
@@ -546,7 +547,7 @@ inline void DrawFolded(int Team, float X, float Y)
 void DrawDiscard(float X, float Y)
 {
     SDL_Rect ItemPosition;
-    SizeF ScreenPosition = {X, Y};
+    SizeF ScreenPosition; ScreenPosition.X = X; ScreenPosition.Y = Y;
     float DrawScale = GetDrawScale();
     SizeF TextureSize, CardSize;
     
@@ -968,11 +969,11 @@ void DrawBackground()
     //GE: Draw the background. The whole system is a difficult way of caltulating the bounding box to fit the thing in without stretching.
     SDL_Rect SourceCoords = {0,0,0,0};
     SourceCoords.w = TextureCoordinates[GAMEBG].X; SourceCoords.h = TextureCoordinates[GAMEBG].Y;
-    SizeF BoundingBox = {800.f/(float)GetConfig(ResolutionX), 300.f/(float)GetConfig(ResolutionY)};
+    SizeF BoundingBox; BoundingBox.X = 800.f/(float)GetConfig(ResolutionX); BoundingBox.Y = 300.f/(float)GetConfig(ResolutionY);
     float DrawScale = FMax(BoundingBox.X/((float)TextureCoordinates[GAMEBG].X/(float)GetConfig(ResolutionX)), BoundingBox.Y/((float)TextureCoordinates[GAMEBG].Y/(float)GetConfig(ResolutionY)));
-    SizeF NewSize = {((float)TextureCoordinates[GAMEBG].X/(float)GetConfig(ResolutionX))*DrawScale, ((float)TextureCoordinates[GAMEBG].Y/(float)GetConfig(ResolutionY))*DrawScale};
-    SizeF Pivot = {(BoundingBox.X-NewSize.X)/2.f, (BoundingBox.Y-NewSize.Y)/2.f};
-    SizeF DestinationCoords = {Pivot.X+0.f, Pivot.Y+(BoundingBox.Y/2.f)};
+    SizeF NewSize; NewSize.X = ((float)TextureCoordinates[GAMEBG].X/(float)GetConfig(ResolutionX))*DrawScale; NewSize.Y = ((float)TextureCoordinates[GAMEBG].Y/(float)GetConfig(ResolutionY))*DrawScale;
+    SizeF Pivot; Pivot.X = (BoundingBox.X-NewSize.X)/2.f; Pivot.Y = (BoundingBox.Y-NewSize.Y)/2.f;
+    SizeF DestinationCoords; DestinationCoords.X = Pivot.X+0.f; DestinationCoords.Y = Pivot.Y+(BoundingBox.Y/2.f);
     DrawTexture(GfxData[GAMEBG], TextureCoordinates[GAMEBG], SourceCoords, DestinationCoords, DrawScale);
     
     
@@ -1138,7 +1139,7 @@ void PlayCardAnimation(int CardPlace, char bDiscarded, char bSameTurn)
     SizeF Destination; Destination.X = 0.5-192*GetDrawScale()/2/800.0; Destination.Y = 0.5-256*GetDrawScale()/2/600.0;
     SizeF CurrentLocation;
     long long AnimDuration = 5*FloatToHnsecs;
-    long long StartTime = GetCurrentTime(), CurrentTime = GetCurrentTime();
+    long long StartTime = GetCurrentTimeD(), CurrentTime = GetCurrentTimeD();
     float ElapsedPercentage = (CurrentTime-StartTime)/(float)AnimDuration;
     
     int i;
@@ -1179,7 +1180,7 @@ void PlayCardAnimation(int CardPlace, char bDiscarded, char bSameTurn)
         UpdateScreen();
         SDL_Delay(10);
         
-        CurrentTime = GetCurrentTime();
+        CurrentTime = GetCurrentTimeD();
         ElapsedPercentage = (CurrentTime-StartTime)/(float)AnimDuration;
     }
     
@@ -1223,7 +1224,7 @@ void PlayCardPostAnimation(int CardPlace)
     SizeF Destination = GetCardOnTableLocation(CardsOnTableSize);
     SizeF CurrentLocation;
     long long AnimDuration = 5*FloatToHnsecs;
-    long long StartTime = GetCurrentTime(), CurrentTime = GetCurrentTime();
+    long long StartTime = GetCurrentTimeD(), CurrentTime = GetCurrentTimeD();
     float ElapsedPercentage = (CurrentTime-StartTime)/(float)AnimDuration;
     
     //int i;
@@ -1253,12 +1254,12 @@ void PlayCardPostAnimation(int CardPlace)
         UpdateScreen();
         SDL_Delay(10);
         
-        CurrentTime = GetCurrentTime();
+        CurrentTime = GetCurrentTimeD();
         ElapsedPercentage = (CurrentTime-StartTime)/(float)AnimDuration;
     }
     
-    StartTime = GetCurrentTime();
-    CurrentTime = GetCurrentTime();
+    StartTime = GetCurrentTimeD();
+    CurrentTime = GetCurrentTimeD();
     ElapsedPercentage = (CurrentTime-StartTime)/(float)AnimDuration;
     
     //GetCardHandle(Turn, CardPlace, &Pool, &Card);
@@ -1284,7 +1285,7 @@ void PlayCardPostAnimation(int CardPlace)
         UpdateScreen();
         SDL_Delay(10);
         
-        CurrentTime = GetCurrentTime();
+        CurrentTime = GetCurrentTimeD();
         ElapsedPercentage = (CurrentTime-StartTime)/(float)AnimDuration;
     }
     
@@ -1378,7 +1379,7 @@ int ValidInputChar(int c)
 	return 0;
 }
 
-char *DialogBox(int type,const char *fmt,...)
+char *DrawDialog(int type,const char *fmt,...)
 {
 	SizeF Position;
     Size TextSize;
@@ -1493,7 +1494,7 @@ void LoadSurface(char* filename, int Slot)
 {
 	SDL_Surface* Surface; Surface = IMG_Load(filename);
 	if (!Surface)
-	    FatalError("File '%s' is missing or corrupt.",filename);
+	    GeneralProtectionFault("File '%s' is missing or corrupt.",filename);
 	GfxData[Slot] = SurfaceToTexture(Surface);
 	TextureCoordinates[Slot].X = (*Surface).w; TextureCoordinates[Slot].Y = (*Surface).h;
 	SDL_FreeSurface(Surface);

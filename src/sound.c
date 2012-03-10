@@ -9,7 +9,7 @@ int bUseMMSounds=1;
 void LoadSound(char *filename,Mix_Chunk **snd)
 {
 	*snd=Mix_LoadWAV(filename);
-	if (!*snd) FatalError("File '%s' is missing or corrupt.",filename);
+	if (!*snd) GeneralProtectionFault("File '%s' is missing or corrupt.",filename);
 }
 
 void Sound_Init()

@@ -10,16 +10,19 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdarg.h>
+//#include "frontend.h"
 #include "adapter.h"
 #include "graphics.h"
 #include "ttf.h"
 #include "input.h"
 
+//void GeneralProtectionFault(char *fmt,...);
+
 /**
  * Utility function for printing out error messages.
  */
 
-void FatalError(char *fmt,...)
+void GeneralProtectionFault(char *fmt,...)
 {
     va_list args;
     va_start(args,fmt);
