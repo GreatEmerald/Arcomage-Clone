@@ -116,7 +116,7 @@ void DoGame()
             {
                 if (FInRect((float)event.button.x/GetConfig(ResolutionX), (float)event.button.y/GetConfig(ResolutionY),
                     CardLocations[Turn][i].X, CardLocations[Turn][i].Y,
-                    CardLocations[Turn][i].X+94/600.0, CardLocations[Turn][i].Y+128/600.0)
+                    CardLocations[Turn][i].X+94/800.0, CardLocations[Turn][i].Y+128/600.0)
                     /*&&  GetCanPlayCard(Turn, i, bDiscarded)*/)
                 {
                     crd=i;
@@ -136,8 +136,6 @@ void DoGame()
         }
         SDL_Delay(CPUWAIT);
     }
-    
-    SDL_Delay(1000);
     
     printf("DoGame(): Info: Game ended: Red gets %d, blue gets %d!\n", IsVictorious(0), IsVictorious(1));
     DrawScene();
@@ -178,5 +176,6 @@ void DoGame()
         }
     }
     UpdateScreen();
+    SDL_Delay(1000);
     WaitForInput();
 }
