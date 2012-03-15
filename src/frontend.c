@@ -92,8 +92,8 @@ int main(int argc,char *argv[])
             DoGame();
             
             //DrawTextLine("This is a test string!", TestLocation);
-            printf("getchar\n");
-            getchar();
+            //printf("getchar\n");
+            //getchar();
             //Player[Turn].Name = "Player";
             //Player[GetEnemy()].Name = "A.I.";
             //DoGame(); //Start the input loop

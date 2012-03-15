@@ -245,7 +245,7 @@ void Graphics_Quit()
     free(CardLocations);
     
     //GEm: TODO: Free CardCache and all its textures
-    printf("DEBUG: Graphics_Quit: Freeing...\n");
+    //printf("DEBUG: Graphics_Quit: Freeing...\n");
     for (i=0; i<PictureFileCacheSize; i++)
         FreeTextures(PictureFileCache[i].Texture);
     free(PictureFileCache);
@@ -946,7 +946,7 @@ int Menu()
                     ((600.0-130.0/2.0)+(108.0*DrawScale/2.0))/600.0))
                     )
                     {
-                        printf("Debug: Menu: MouseUp with %d\n", i);
+                        //printf("Debug: Menu: MouseUp with %d\n", i);
                         value = i;
                     }
                 }

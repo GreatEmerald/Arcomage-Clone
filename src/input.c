@@ -110,7 +110,10 @@ void DoGame()
             }*/ //GEm: TODO: Card highlighting
 
             if (event.type != SDL_MOUSEBUTTONUP || event.button.button > 3)
+            {
+                SDL_Delay(0); //GEm: HACK
                 continue;
+            }
             bDiscarded = (event.button.button == 2) || (event.button.button == 3);
             for (i=0; i<GetConfig(CardsInHand); i++)
             {
@@ -137,7 +140,7 @@ void DoGame()
         SDL_Delay(CPUWAIT);
     }
     
-    printf("DoGame(): Info: Game ended: Red gets %d, blue gets %d!\n", IsVictorious(0), IsVictorious(1));
+    //printf("DoGame(): Info: Game ended: Red gets %d, blue gets %d!\n", IsVictorious(0), IsVictorious(1));
     DrawScene();
     if (IsVictorious(0) && IsVictorious(1))
     {
@@ -177,5 +180,6 @@ void DoGame()
     }
     UpdateScreen();
     SDL_Delay(1000);
+    while (SDL_PollEvent(&event));
     WaitForInput();
 }

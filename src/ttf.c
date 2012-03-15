@@ -92,17 +92,13 @@ void QuitTTF()
  */ 
 void DrawTextLine(char* text, SizeF location)
 {
-	SDL_Rect rect = {0, 0, 0, 0};
-	int w,h;
 	GLuint texture;
     Size TextureSize;
 
-    texture = TextToTexture(Fonts[Font_Description], text);
+    texture = TextToTexture(Fonts[Font_Message], text);
     
-    TTF_SizeText(Fonts[Font_Description], text, &w, &h);
-    rect.w = w; rect.h = h;
-    TextureSize.X = w; TextureSize.Y= h;
-    DrawTexture(texture, TextureSize, rect, location, 1.0);
+    TTF_SizeText(Fonts[Font_Message], text, &(TextureSize.X), &(TextureSize.Y));
+    DrawTexture(texture, TextureSize, AbsoluteTextureSize(TextureSize), location, 1.0);
 
 	/* Clean up */
 	glDeleteTextures(1, &texture);
@@ -110,8 +106,6 @@ void DrawTextLine(char* text, SizeF location)
 
 void DrawCustomTextCentred(char* text, int FontType, SizeF BoxLocation, SizeF BoxSize)
 {
-	SDL_Rect rect = {0, 0, 0, 0};
-	int w,h;
 	GLuint texture;
     Size TextureSize;
     SizeF RelativeSize;
@@ -119,13 +113,11 @@ void DrawCustomTextCentred(char* text, int FontType, SizeF BoxLocation, SizeF Bo
     SDL_Color Colour = {255, 255, 255};
     texture = TextToTextureColour(Fonts[FontType], text, Colour);
     
-    TTF_SizeText(Fonts[Font_Description], text, &w, &h);
-    rect.w = w; rect.h = h;
-    TextureSize.X = w; TextureSize.Y= h;
-    RelativeSize.X = w/(float)GetConfig(ResolutionX); RelativeSize.Y = h/(float)GetConfig(ResolutionY);
+    TTF_SizeText(Fonts[Font_Message], text, &(TextureSize.X), &(TextureSize.Y));
+    RelativeSize.X = TextureSize.X/(float)GetConfig(ResolutionX); RelativeSize.Y = TextureSize.Y/(float)GetConfig(ResolutionY);
     BoxLocation = CentreOnX(BoxLocation, RelativeSize, BoxSize);
     
-    DrawTexture(texture, TextureSize, rect, BoxLocation, 1.0);
+    DrawTexture(texture, TextureSize, AbsoluteTextureSize(TextureSize), BoxLocation, 1.0);
 
 	/* Clean up */
 	glDeleteTextures(1, &texture);

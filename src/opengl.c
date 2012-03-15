@@ -56,7 +56,7 @@ GLuint SurfaceToTexture(SDL_Surface* surface)
     }
     else
     {
-            printf("Warning: The image is not Truecolour. This will probably break.\n");
+            //printf("Warning: The image is not Truecolour. This will probably break.\n");
     }
      
     // Have OpenGL generate a texture object handle for us
