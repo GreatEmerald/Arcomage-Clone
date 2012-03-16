@@ -5,7 +5,7 @@ dmc frontend.c adapter.c graphics.c BFont.c opengl.c ttf.c input.c ^
   ..\..\libarcomage\lib\lua51.lib ^
   ..\..\libarcomage\lib\arcomage.lib ^
   ..\..\libarcomage\lib\phobos.lib ^
-  -I..\include -o..\bin\win32\Arcomage.exe
+  -I..\include -L/SUBSYSTEM:WINDOWS -o..\bin\win32\Arcomage.exe
 del *.obj
 del *.map
 echo Rebuild is complete. The new binaries are stored in /bin/win32.
